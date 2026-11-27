@@ -165,13 +165,30 @@ export function titleForLink(url: string, meta: TikTokMeta | null): string {
 }
 
 /** Does the downloaded video actually exist on disk? */
-export async function hasMedia(id: string): Promise<boolean> {
-  try {
-    const s = await fs.stat(path.join(process.cwd(), ".media", `${id}.mp4`));
-    return s.size > 20_000;
-  } catch {
-    return false;
+/** Container extensions a clip may be stored as. */
+export const MEDIA_EXTS = ["mp4", "mov", "webm", "m4v", "mkv"] as const;
+
+/**
+ * Resolve the actual on-disk path for a clip. Files can arrive as mp4 (TikTok
+ * download) or whatever the operator's phone recorded, so we probe rather than
+ * assume an extension.
+ */
+export async function findMediaPath(id: string): Promise<string | null> {
+  const dir = path.join(process.cwd(), ".media");
+  for (const ext of MEDIA_EXTS) {
+    const candidate = path.join(dir, `${id}.${ext}`);
+    try {
+      const s = await fs.stat(candidate);
+      if (s.size > 20_000) return candidate;
+    } catch {
+      /* try the next extension */
+    }
   }
+  return null;
+}
+
+export async function hasMedia(id: string): Promise<boolean> {
+  return (await findMediaPath(id)) !== null;
 }
 
 /** Does the custom cover actually exist on disk? */
