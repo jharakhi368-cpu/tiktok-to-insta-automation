@@ -234,6 +234,14 @@ export default function EditBay({
         })}
       </div>
 
+      {/* progress through the four steps */}
+      <div className="h-[2px] w-full bg-line/70">
+        <div
+          className="h-[2px] bg-gradient-to-r from-amber/60 to-amber transition-[width] duration-500 ease-out"
+          style={{ width: `${(step / 4) * 100}%` }}
+        />
+      </div>
+
       <div className="grid gap-6 p-4 xl:grid-cols-[268px_minmax(0,1fr)]">
         {/* ── the reel ───────────────────────────── */}
         <div className="mx-auto w-full max-w-[280px] xl:mx-0 xl:max-w-none">
@@ -412,7 +420,7 @@ export default function EditBay({
                 <button
                   type="button"
                   onClick={() => setStep(2)}
-                  className="flex items-center gap-2 bg-amber px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[#101216] transition-all hover:bg-[#ffc355] active:translate-y-px"
+                  className="sheen flex items-center gap-2 bg-amber px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[#101216] transition-all hover:bg-[#ffc355] active:translate-y-px"
                 >
                   Use this cover <ArrowRight size={13} />
                 </button>
@@ -433,7 +441,7 @@ export default function EditBay({
                 2 · Write the caption
               </h2>
               <p className="mt-2 max-w-[52ch] text-[13.5px] leading-relaxed text-muted">
-                This is the text that appears under the reel on Instagram. Tap a hashtag to add it.
+                This is the text that appears under the reel on Instagram.
               </p>
 
               <div className="mt-4 flex items-baseline justify-between gap-3">
@@ -508,7 +516,7 @@ export default function EditBay({
                     flushCaption();
                     setStep(3);
                   }}
-                  className="flex items-center gap-2 bg-amber px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[#101216] transition-all hover:bg-[#ffc355] active:translate-y-px"
+                  className="sheen flex items-center gap-2 bg-amber px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[#101216] transition-all hover:bg-[#ffc355] active:translate-y-px"
                 >
                   Save caption <ArrowRight size={13} />
                 </button>
@@ -676,7 +684,7 @@ export default function EditBay({
                       type="button"
                       onClick={postNow}
                       disabled={busy}
-                      className="flex items-center gap-2 bg-amber px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[#101216] transition-all hover:bg-[#ffc355] active:translate-y-px disabled:opacity-50"
+                      className="sheen flex items-center gap-2 bg-amber px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[#101216] transition-all hover:bg-[#ffc355] active:translate-y-px disabled:opacity-50"
                     >
                       <Zap size={13} /> {busy ? "Posting…" : "Post now instead"}
                     </button>

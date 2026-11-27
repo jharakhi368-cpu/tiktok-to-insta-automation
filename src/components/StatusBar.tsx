@@ -1,6 +1,5 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
 import type { Env, VideoDTO } from "@/lib/types";
 import { hhmmss } from "@/lib/ui";
 
@@ -15,39 +14,6 @@ function Led({ label, on }: { label: string; on: boolean }) {
         }`}
       />
       <span className="label">{label}</span>
-    </div>
-  );
-}
-
-function Channel({
-  name,
-  dot,
-  sub,
-  state,
-  ok,
-}: {
-  name: string;
-  dot: string;
-  sub: string;
-  state: string;
-  ok: boolean;
-}) {
-  return (
-    <div className="flex items-center gap-2.5 border border-line bg-black/45 px-3 py-2">
-      <span className={`h-2 w-2 rounded-full ${dot}`} />
-      <span className="min-w-0">
-        <span className="block font-mono text-[10px] uppercase tracking-[0.16em] text-ink">
-          {name}
-        </span>
-        <span className="mt-0.5 block truncate font-mono text-[10px] text-muted">{sub}</span>
-      </span>
-      <span
-        className={`ml-1 font-mono text-[9px] uppercase tracking-[0.14em] ${
-          ok ? "text-onair" : "text-amber"
-        }`}
-      >
-        {state}
-      </span>
     </div>
   );
 }
@@ -100,6 +66,11 @@ export default function StatusBar({
         className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-40"
       />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-base via-base/92 to-base/55" />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-24 top-1/2 h-64 w-[420px] -translate-y-1/2 rounded-full bg-amber/25 blur-[90px]"
+        style={{ animation: "breathe 7s ease-in-out infinite" }}
+      />
 
       <div className="relative flex flex-wrap items-end justify-between gap-x-8 gap-y-5 px-5 py-4">
         <div className="flex items-end gap-5">
@@ -110,23 +81,6 @@ export default function StatusBar({
             <div className="label mt-2.5">TT → IG RELAY CONSOLE</div>
           </div>
 
-          <div className="hidden items-center gap-3 pb-1 md:flex">
-            <Channel
-              name="Telegram"
-              dot="bg-tg"
-              sub={env?.botHandle ?? "@reelay_bot"}
-              state={env?.bot ? "LINKED" : "NO TOKEN"}
-              ok={Boolean(env?.bot)}
-            />
-            <ArrowRight size={14} className="shrink-0 text-amber" />
-            <Channel
-              name="Instagram"
-              dot="bg-ig"
-              sub="GRAPH API · REELS"
-              state={env?.instagram ? "LINKED" : "SIM MODE"}
-              ok={Boolean(env?.instagram)}
-            />
-          </div>
         </div>
 
         <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
@@ -135,7 +89,6 @@ export default function StatusBar({
           <Stat label="Inbox" value={intake} tone="grey" />
           <div className="flex flex-col gap-2 pb-1">
             <Led label="Scheduler" on={Boolean(env?.scheduler)} />
-            <Led label="Bot" on={Boolean(env?.bot)} />
           </div>
           <div className="border-l border-line pb-1 pl-5 text-right">
             <div className="font-mono text-[26px] font-medium leading-none tabular-nums">
