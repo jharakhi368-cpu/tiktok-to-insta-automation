@@ -420,7 +420,7 @@ export default function EditBay({
                 <button
                   type="button"
                   onClick={() => setStep(2)}
-                  className="sheen flex items-center gap-2 bg-amber px-5 py-2.5 text-[13px] font-semibold tracking-[-0.01em] text-white transition-all hover:bg-[#0059c7] active:translate-y-px"
+                  className="sheen flex items-center gap-2 glass-cta px-5 py-2.5 text-[13px] font-semibold tracking-[-0.01em] transition-all"
                 >
                   Use this cover <ArrowRight size={13} />
                 </button>
@@ -481,7 +481,7 @@ export default function EditBay({
                 })}
               </div>
 
-              <div className="mt-4 border border-line rounded-2xl bg-panel/60 px-3">
+              <div className="mt-4 glass border border-line rounded-2xl px-3">
                 <Toggle
                   checked={first}
                   onChange={(v) => {
@@ -516,7 +516,7 @@ export default function EditBay({
                     flushCaption();
                     setStep(3);
                   }}
-                  className="sheen flex items-center gap-2 bg-amber px-5 py-2.5 text-[13px] font-semibold tracking-[-0.01em] text-white transition-all hover:bg-[#0059c7] active:translate-y-px"
+                  className="sheen flex items-center gap-2 glass-cta px-5 py-2.5 text-[13px] font-semibold tracking-[-0.01em] transition-all"
                 >
                   Save caption <ArrowRight size={13} />
                 </button>
@@ -568,7 +568,7 @@ export default function EditBay({
                       setStep(4);
                     }}
                     disabled={busy}
-                    className="mt-3 flex items-center gap-2 bg-amber px-5 py-2.5 text-[13px] font-semibold tracking-[-0.01em] text-white transition-all hover:bg-[#0059c7] active:translate-y-px disabled:opacity-50"
+                    className="mt-3 flex items-center gap-2 glass-cta px-5 py-2.5 text-[13px] font-semibold tracking-[-0.01em] transition-all disabled:opacity-50"
                   >
                     Confirm schedule <ArrowRight size={13} />
                   </button>
@@ -581,7 +581,7 @@ export default function EditBay({
                 </p>
               )}
 
-              <div className="mt-4 border border-line rounded-2xl bg-panel/60 px-3">
+              <div className="mt-4 glass border border-line rounded-2xl px-3">
                 <Toggle
                   checked={auto}
                   onChange={(v) => {
@@ -684,7 +684,7 @@ export default function EditBay({
                       type="button"
                       onClick={postNow}
                       disabled={busy}
-                      className="sheen flex items-center gap-2 bg-amber px-5 py-2.5 text-[13px] font-semibold tracking-[-0.01em] text-white transition-all hover:bg-[#0059c7] active:translate-y-px disabled:opacity-50"
+                      className="sheen flex items-center gap-2 glass-cta px-5 py-2.5 text-[13px] font-semibold tracking-[-0.01em] transition-all disabled:opacity-50"
                     >
                       <Zap size={13} /> {busy ? "Posting…" : "Post now instead"}
                     </button>

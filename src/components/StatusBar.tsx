@@ -58,7 +58,7 @@ export default function StatusBar({
   const intake = videos.filter((v) => v.status === "intake" || v.status === "ready").length;
 
   return (
-    <header className="relative shrink-0 overflow-hidden border-b border-line bg-panel/75 backdrop-blur-xl">
+    <header className="relative shrink-0 overflow-hidden glass border-b border-line">
       {/* system-blue wash, barely there — Apple headers are never flat */}
       <div
         aria-hidden="true"

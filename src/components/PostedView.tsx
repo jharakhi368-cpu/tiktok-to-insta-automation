@@ -116,7 +116,7 @@ export default function PostedView() {
         />
 
         {posted.length === 0 ? (
-          <div className="border border-line rounded-2xl bg-panel/50 px-6 py-16 text-center">
+          <div className="glass border border-line rounded-2xl px-6 py-16 text-center">
             <div className="text-[13px] font-semibold tracking-[-0.01em] text-muted">
               Nothing posted yet
             </div>
@@ -130,7 +130,7 @@ export default function PostedView() {
             {posted.map((v) => (
               <article
                 key={v.id}
-                className="lift group flex gap-3 border border-line rounded-2xl bg-panel/60 p-3"
+                className="lift group flex gap-3 glass border border-line rounded-2xl p-3"
               >
                 <div className="relative aspect-[9/16] w-[74px] shrink-0 overflow-hidden border border-line bg-black">
                   <img
