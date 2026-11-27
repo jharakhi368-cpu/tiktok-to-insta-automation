@@ -1,5 +1,9 @@
 # REELAY — TT → IG relay console
 
+> **Status: deploy-ready.** Drop a TikTok link or send a video to the bot, pick the
+> cover frame, write the caption, set an exact air time — REELAY publishes it to
+> Instagram as a Reel via Zernio. Runs on Render + Neon + UptimeRobot for $0.
+
 Drop TikTok videos into a Telegram bot, set the cover frame, write the caption,
 pick an exact air time, and REELAY pushes them to Instagram as Reels — from a
 broadcast-style console, or entirely from Telegram buttons.
