@@ -97,7 +97,7 @@ export default function PlayoutLog({
         }
       />
 
-      <div className="grid grid-cols-[52px_minmax(0,1fr)_auto] gap-2.5 border-b border-line bg-black/30 px-4 py-1.5">
+      <div className="grid grid-cols-[52px_minmax(0,1fr)_auto] gap-2.5 border-b border-line bg-sunken px-4 py-1.5">
         <span className="label">Time</span>
         <span className="label">Clip</span>
         <span className="label">St</span>
@@ -141,7 +141,7 @@ export default function PlayoutLog({
         <div className="flex items-center justify-between">
           <span className="label">Auto-posting</span>
           <span
-            className={`font-mono text-[10px] uppercase tracking-[0.12em] ${
+            className={`text-[12px] font-semibold tracking-[0.01em] ${
               env?.schedulerError ? "text-fault" : "text-onair"
             }`}
           >

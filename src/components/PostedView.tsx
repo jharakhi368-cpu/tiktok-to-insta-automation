@@ -58,7 +58,7 @@ export default function PostedView() {
                 }
               }}
               disabled={!posted.length && !failed.length}
-              className="flex items-center gap-2 border border-line px-3 py-2 font-mono text-[10px] uppercase tracking-[0.12em] text-muted transition-colors hover:border-fault hover:text-fault disabled:opacity-40"
+              className="flex items-center gap-2 border border-line px-3 py-2 text-[12px] font-semibold tracking-[0.01em] text-muted transition-colors hover:border-fault hover:text-fault disabled:opacity-40"
             >
               <Trash2 size={12} /> Clear history
             </button>
@@ -95,7 +95,7 @@ export default function PostedView() {
                 type="button"
                 onClick={() => publish(v.id)}
                 disabled={busy}
-                className="flex items-center gap-1.5 border border-fault/60 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-fault transition-colors hover:bg-fault hover:text-[#101216] disabled:opacity-50"
+                className="flex items-center gap-1.5 border border-fault/60 px-3 py-1.5 text-[12px] font-semibold tracking-[0.01em] text-fault transition-colors hover:bg-fault hover:text-white disabled:opacity-50"
               >
                 <RotateCcw size={12} /> Retry
               </button>
@@ -116,8 +116,8 @@ export default function PostedView() {
         />
 
         {posted.length === 0 ? (
-          <div className="border border-line bg-panel/50 px-6 py-16 text-center">
-            <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+          <div className="border border-line rounded-2xl bg-panel/50 px-6 py-16 text-center">
+            <div className="text-[13px] font-semibold tracking-[-0.01em] text-muted">
               Nothing posted yet
             </div>
             <p className="mx-auto mt-3 max-w-[380px] text-[13.5px] leading-relaxed text-muted">
@@ -130,7 +130,7 @@ export default function PostedView() {
             {posted.map((v) => (
               <article
                 key={v.id}
-                className="lift group flex gap-3 border border-line bg-panel/60 p-3"
+                className="lift group flex gap-3 border border-line rounded-2xl bg-panel/60 p-3"
               >
                 <div className="relative aspect-[9/16] w-[74px] shrink-0 overflow-hidden border border-line bg-black">
                   <img

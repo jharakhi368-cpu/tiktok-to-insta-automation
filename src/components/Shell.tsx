@@ -25,7 +25,7 @@ function Frame({ children, variant }: { children: ReactNode; variant: "console" 
       {toast ? (
         <div
           role="status"
-          className="fixed bottom-5 right-5 z-50 max-w-[340px] animate-[toastin_.18s_ease-out] border border-line border-l-2 border-l-amber bg-raise px-4 py-3 font-mono text-[11px] leading-relaxed text-ink shadow-[0_18px_40px_rgba(0,0,0,.55)]"
+          className="fixed bottom-5 right-5 z-50 max-w-[340px] animate-[toastin_.18s_ease-out] border border-line border-l-2 border-l-amber bg-raise px-4 py-3 font-mono text-[11px] leading-relaxed text-ink shadow-[0_1px_3px_rgba(0,0,0,.06),0_12px_32px_-12px_rgba(0,0,0,.22)]"
         >
           {toast}
         </div>

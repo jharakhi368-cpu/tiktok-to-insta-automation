@@ -123,7 +123,7 @@ export default function IgView() {
             title="Zernio · recommended"
             right={
               <span
-                className={`font-mono text-[10px] uppercase tracking-[0.12em] ${
+                className={`text-[12px] font-semibold tracking-[0.01em] ${
                   ig?.zernio.linked ? "text-onair" : "text-amber"
                 }`}
               >
@@ -159,7 +159,7 @@ export default function IgView() {
                   autoComplete="off"
                   spellCheck={false}
                   disabled={showGraph}
-                  className="w-full border border-line bg-black/40 px-3 py-2.5 pr-10 font-mono text-[13px] text-ink outline-none transition-colors placeholder:text-muted/60 focus:border-amber disabled:opacity-40"
+                  className="w-full border border-line bg-sunken px-3 py-2.5 pr-10 font-mono text-[13px] text-ink outline-none transition-colors placeholder:text-muted/60 focus:border-amber disabled:opacity-40"
                 />
                 <button
                   type="button"
@@ -173,7 +173,7 @@ export default function IgView() {
               <button
                 type="submit"
                 disabled={busy || !zKey.trim()}
-                className="flex items-center gap-2 bg-amber px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[#101216] transition-all hover:bg-[#ffc355] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex items-center gap-2 bg-amber px-5 py-2.5 text-[13px] font-semibold tracking-[-0.01em] text-white transition-all hover:bg-[#0059c7] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Plug size={13} /> {busy ? "Checking…" : "Connect"}
               </button>
@@ -190,11 +190,11 @@ export default function IgView() {
           </form>
 
           {/* status */}
-          <div className="mt-5 border border-line bg-panel/60 p-4">
+          <div className="mt-5 border border-line rounded-2xl bg-panel/60 p-4">
             <div className="flex items-center justify-between">
               <span className="label">Connection</span>
               <span
-                className={`flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] ${
+                className={`flex items-center gap-2 text-[13px] font-semibold tracking-[-0.01em] ${
                   linked ? "text-onair" : "text-amber"
                 }`}
               >
@@ -258,7 +258,7 @@ export default function IgView() {
                   }
                 }}
                 disabled={busy || !ig?.zernio.linked}
-                className="flex items-center gap-2 border border-line px-3 py-2 font-mono text-[10px] uppercase tracking-[0.12em] text-muted transition-colors hover:border-amber hover:text-amber disabled:opacity-40"
+                className="flex items-center gap-2 border border-line px-3 py-2 text-[12px] font-semibold tracking-[0.01em] text-muted transition-colors hover:border-amber hover:text-amber disabled:opacity-40"
               >
                 <RefreshCw size={12} /> Refresh account id
               </button>
@@ -266,11 +266,11 @@ export default function IgView() {
                 type="button"
                 onClick={unlink}
                 disabled={busy || !linked}
-                className="flex items-center gap-2 border border-line px-3 py-2 font-mono text-[10px] uppercase tracking-[0.12em] text-muted transition-colors hover:border-fault hover:text-fault disabled:opacity-40"
+                className="flex items-center gap-2 border border-line px-3 py-2 text-[12px] font-semibold tracking-[0.01em] text-muted transition-colors hover:border-fault hover:text-fault disabled:opacity-40"
               >
                 <Unplug size={12} /> Unlink
               </button>
-              <span className="flex items-center gap-2 px-1 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">
+              <span className="flex items-center gap-2 px-1 text-[12px] font-semibold tracking-[0.01em] text-muted">
                 <Link2 size={12} /> key stored in Postgres, never in the browser
               </span>
             </div>
@@ -280,9 +280,9 @@ export default function IgView() {
           <details
             open={showGraph}
             onToggle={(e) => setShowGraph((e.target as HTMLDetailsElement).open)}
-            className="mt-5 border border-line bg-black/20"
+            className="mt-5 border border-line bg-sunken"
           >
-            <summary className="cursor-pointer list-none border-b border-line px-4 py-3 font-mono text-[11px] uppercase tracking-[0.14em] text-muted transition-colors hover:text-amber">
+            <summary className="cursor-pointer list-none border-b border-line px-4 py-3 text-[13px] font-semibold tracking-[-0.01em] text-muted transition-colors hover:text-amber">
               Advanced · use the Meta Graph API instead
             </summary>
             <div className="p-4">
@@ -300,7 +300,7 @@ export default function IgView() {
                 onChange={(e) => setGToken(e.target.value)}
                 placeholder="EAAG…"
                 autoComplete="off"
-                className="mt-2 w-full border border-line bg-black/40 px-3 py-2.5 font-mono text-[13px] text-ink outline-none focus:border-amber"
+                className="mt-2 w-full border border-line bg-sunken px-3 py-2.5 font-mono text-[13px] text-ink outline-none focus:border-amber"
               />
               <label className="label mt-4 block" htmlFor="g-user">
                 Instagram business account id <span className="text-muted/60">(optional)</span>
@@ -312,13 +312,13 @@ export default function IgView() {
                 onChange={(e) => setGUser(e.target.value)}
                 placeholder="17841400000000000"
                 autoComplete="off"
-                className="mt-2 w-full border border-line bg-black/40 px-3 py-2.5 font-mono text-[13px] text-ink outline-none focus:border-amber"
+                className="mt-2 w-full border border-line bg-sunken px-3 py-2.5 font-mono text-[13px] text-ink outline-none focus:border-amber"
               />
               <button
                 type="button"
                 onClick={link}
                 disabled={busy || !gToken.trim()}
-                className="mt-4 flex items-center gap-2 border border-line px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.16em] text-ink transition-colors hover:border-amber hover:text-amber disabled:opacity-40"
+                className="mt-4 flex items-center gap-2 border border-line px-4 py-2.5 text-[13px] font-semibold tracking-[-0.01em] text-ink transition-colors hover:border-amber hover:text-amber disabled:opacity-40"
               >
                 <Zap size={13} /> Connect via Graph
               </button>
@@ -330,7 +330,7 @@ export default function IgView() {
         <div>
           <SectionHead num="11" title="What goes out" />
 
-          <div className="mt-4 border border-line bg-panel/60 p-3">
+          <div className="mt-4 border border-line rounded-2xl bg-panel/60 p-3">
             <div className="mx-auto w-[150px]">
               <div className="relative aspect-[9/16] overflow-hidden border border-line bg-black">
                 <img
@@ -356,7 +356,7 @@ export default function IgView() {
             <div className="mt-3 flex items-center justify-between">
               <span className="label">Preview</span>
               <span
-                className={`font-mono text-[10px] uppercase tracking-[0.12em] ${
+                className={`text-[12px] font-semibold tracking-[0.01em] ${
                   linked ? "text-onair" : "text-amber"
                 }`}
               >
@@ -365,7 +365,7 @@ export default function IgView() {
             </div>
           </div>
 
-          <div className="mt-5 border border-line bg-panel/60">
+          <div className="mt-5 border border-line rounded-2xl bg-panel/60">
             <div className="label border-b border-line px-3 py-2.5">Publish spec</div>
             {SPEC.map(([k, v]) => (
               <div
@@ -380,7 +380,7 @@ export default function IgView() {
             ))}
           </div>
 
-          <div className="mt-5 flex gap-3 border border-line bg-black/30 p-3">
+          <div className="mt-5 flex gap-3 border border-line bg-sunken p-3">
             <Link2 size={14} className="mt-0.5 shrink-0 text-amber" />
             <p className="text-[12.5px] leading-relaxed text-muted">
               Scheduler, bot and credentials live in this one service — once it is hosted, posts go

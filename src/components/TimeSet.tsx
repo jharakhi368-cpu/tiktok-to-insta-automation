@@ -25,7 +25,7 @@ function Step({
   onUp: () => void;
 }) {
   return (
-    <div className="border border-line bg-black/40">
+    <div className="border border-line bg-sunken">
       <div className="label border-b border-line py-1 text-center">{label}</div>
       <div className="flex items-center justify-between">
         <button
@@ -132,7 +132,7 @@ export default function TimeSet({ value, onChange, now }: Props) {
   const dateInput = `${local.getFullYear()}-${pad(local.getMonth() + 1)}-${pad(local.getDate())}`;
 
   return (
-    <div className="border border-line bg-panel/60 p-3">
+    <div className="border border-line rounded-2xl bg-panel/60 p-3">
       <div className="flex items-center justify-between">
         <span className="label">Air time · custom set</span>
         <span className="font-mono text-[11px] tabular-nums text-amber">{cd}</span>
@@ -142,7 +142,7 @@ export default function TimeSet({ value, onChange, now }: Props) {
         <span className="text-[30px] font-extrabold leading-none tracking-[-0.035em] text-ink">
           {pad(local.getHours())}:{pad(local.getMinutes())}
         </span>
-        <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
+        <span className="text-[13px] font-semibold tracking-[-0.01em] text-muted">
           {DAY[local.getDay()]} {pad(local.getDate())} {MON[local.getMonth()]} {local.getFullYear()}
         </span>
       </div>
@@ -155,7 +155,7 @@ export default function TimeSet({ value, onChange, now }: Props) {
               key={d.toISOString()}
               type="button"
               onClick={() => setDay(d)}
-              className={`shrink-0 border px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.1em] transition-colors ${
+              className={`shrink-0 border px-2.5 py-1.5 text-[12px] font-semibold tracking-[0.01em] transition-colors ${
                 on
                   ? "border-amber bg-amber/15 text-amber"
                   : "border-line text-muted hover:border-amber/60 hover:text-ink"
@@ -213,7 +213,7 @@ export default function TimeSet({ value, onChange, now }: Props) {
             next.setFullYear(y, m - 1, d);
             emit(next);
           }}
-          className="ml-auto w-[140px] border border-line bg-black/40 px-2 py-1 font-mono text-[11px] tabular-nums text-ink outline-none transition-colors focus:border-amber [color-scheme:dark]"
+          className="ml-auto w-[140px] border border-line bg-sunken px-2 py-1 font-mono text-[11px] tabular-nums text-ink outline-none transition-colors focus:border-amber [color-scheme:light]"
         />
       </div>
 
@@ -228,7 +228,7 @@ export default function TimeSet({ value, onChange, now }: Props) {
             key={p.k}
             type="button"
             onClick={() => preset(p.k)}
-            className="border border-line bg-black/30 px-2 py-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-muted transition-colors hover:border-amber hover:text-amber"
+            className="border border-line bg-sunken px-2 py-1.5 text-[12px] font-semibold tracking-[0.01em] text-muted transition-colors hover:border-amber hover:text-amber"
           >
             {p.l}
           </button>
