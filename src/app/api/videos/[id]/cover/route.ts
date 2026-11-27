@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { videos } from "@/db/schema";
+import { requireUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,8 @@ async function findCover(id: string) {
 
 /** Upload (or clear) a custom cover page for a clip. */
 export async function POST(req: Request, { params }: Ctx) {
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   const { id } = await params;
   try {
     const form = await req.formData().catch(() => null);

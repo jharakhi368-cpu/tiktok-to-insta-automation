@@ -1,18 +1,22 @@
 import { NextResponse } from "next/server";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { videos } from "@/db/schema";
 import { envState, listVideos } from "@/lib/pipeline";
 import { ensureBotRunning } from "@/lib/telegram";
 import { ingestTikTokLink, isTikTok } from "@/lib/tiktok";
+import { requireUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
+
     await ensureBotRunning();
-    const list = await listVideos();
-    return NextResponse.json({ videos: list, env: envState() });
+    const list = await listVideos(user.id);
+    return NextResponse.json({ videos: list, env: envState(user.id) });
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "db error" },
@@ -50,14 +54,18 @@ function slugName(s: string) {
  */
 export async function DELETE(req: Request) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
+
     const body = (await req.json().catch(() => ({}))) as { scope?: string };
     const all = body.scope === "all";
+    const mine = eq(videos.userId, user.id);
 
     const removed = all
-      ? await db.delete(videos).returning({ id: videos.id })
+      ? await db.delete(videos).where(mine).returning({ id: videos.id })
       : await db
           .delete(videos)
-          .where(inArray(videos.status, ["published", "failed", "publishing"]))
+          .where(and(mine, inArray(videos.status, ["published", "failed", "publishing"])))
           .returning({ id: videos.id });
 
     return NextResponse.json({
@@ -78,6 +86,9 @@ export async function DELETE(req: Request) {
 /** Manual intake: paste a TikTok link or drop a file into the rail. */
 export async function POST(req: Request) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
+
     const body = await req.json().catch(() => ({}));
     const url: string = typeof body.url === "string" ? body.url.trim() : "";
     const fileName: string =
@@ -97,13 +108,13 @@ export async function POST(req: Request) {
       const [existing] = await db
         .select()
         .from(videos)
-        .where(eq(videos.sourceRef, url))
+        .where(and(eq(videos.sourceRef, url), eq(videos.userId, user.id)))
         .limit(1);
       if (existing) {
         return NextResponse.json({
           video: existing,
-          videos: await listVideos(),
-          env: envState(),
+          videos: await listVideos(user.id),
+          env: envState(user.id),
           note: "That link is already in your videos.",
         });
       }
@@ -112,6 +123,7 @@ export async function POST(req: Request) {
     const [created] = await db
       .insert(videos)
       .values({
+        userId: user.id,
         // the background download below replaces these with the real ones
         title: url ? "Adding from TikTok…" : slugName(fileName),
         thumb: thumb || FALLBACK_THUMBS[Math.floor(Math.random() * FALLBACK_THUMBS.length)],
@@ -147,8 +159,8 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         video: created,
-        videos: await listVideos(),
-        env: envState(),
+        videos: await listVideos(user.id),
+        env: envState(user.id),
         note:
           url && isTikTok(url)
             ? "Added — downloading the video from TikTok now."

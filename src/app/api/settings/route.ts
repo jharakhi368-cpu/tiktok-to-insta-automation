@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { envState } from "@/lib/pipeline";
 import { KEYS, getMany, setSetting } from "@/lib/settings";
+import { requireUser } from "@/lib/auth";
 import {
   botHandle,
   botPolling,
@@ -59,6 +60,8 @@ async function setWebhookMode(body: Record<string, unknown>) {
 
 export async function GET(req: Request) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
     const url = new URL(req.url);
     if (url.searchParams.get("test") === "1") {
       const token = await resolveToken();
@@ -77,6 +80,8 @@ export async function GET(req: Request) {
 /** Link (or relink) the Telegram bot. */
 export async function POST(req: Request) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
     const body = await req.json().catch(() => ({}));
 
     // switch between webhook mode (free hosts that sleep) and long polling
@@ -117,6 +122,8 @@ export async function POST(req: Request) {
 /** Unlink the bot. */
 export async function DELETE() {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
     await setSetting(KEYS.tgToken, null);
     await setSetting(KEYS.tgHandle, null);
     await stopBot();

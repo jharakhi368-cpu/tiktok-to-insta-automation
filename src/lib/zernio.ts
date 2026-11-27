@@ -16,10 +16,18 @@
  */
 
 import { promises as fs } from "fs";
-import { existsSync } from "fs";
 import path from "path";
 import { KEYS, getSetting, peekSetting, setSetting } from "./settings";
 import type { PublishResult } from "./instagram";
+import { findMediaPath } from "./tiktok";
+
+const MEDIA_TYPES: Record<string, string> = {
+  mp4: "video/mp4",
+  mov: "video/quicktime",
+  webm: "video/webm",
+  m4v: "video/x-m4v",
+  mkv: "video/x-matroska",
+};
 
 const BASE = () => process.env.ZERNIO_API_URL ?? "https://zernio.com/api/v1";
 
@@ -28,7 +36,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const POLL_TRIES = Number(process.env.ZERNIO_POLL_TRIES ?? 12);
 const POLL_MS = Number(process.env.ZERNIO_POLL_MS ?? 3000);
 
-export type ZernioCfg = { key: string; accountId: string };
+export type ZernioCfg = { key: string; accountId: string; userId?: string | null };
 export type ZernioAccount = { id: string; username?: string; platform?: string };
 
 export type ZernioInput = {
@@ -44,21 +52,22 @@ export type ZernioInput = {
   firstComment?: boolean;
 };
 
-export async function zernioConfig(): Promise<ZernioCfg | null> {
-  const key = (await getSetting(KEYS.zKey)) || process.env.ZERNIO_API_KEY || null;
+/** Account-scoped: each account holds its own key and account id. */
+export async function zernioConfig(userId?: string | null): Promise<ZernioCfg | null> {
+  const key = (await getSetting(KEYS.zKey, userId)) || process.env.ZERNIO_API_KEY || null;
   const accountId =
-    (await getSetting(KEYS.zAccount)) || process.env.ZERNIO_ACCOUNT_ID || null;
+    (await getSetting(KEYS.zAccount, userId)) || process.env.ZERNIO_ACCOUNT_ID || null;
   return key && accountId ? { key, accountId } : null;
 }
 
-export function zernioReady(): boolean {
-  const key = peekSetting(KEYS.zKey) ?? process.env.ZERNIO_API_KEY ?? null;
-  const acct = peekSetting(KEYS.zAccount) ?? process.env.ZERNIO_ACCOUNT_ID ?? null;
+export function zernioReady(userId?: string | null): boolean {
+  const key = peekSetting(KEYS.zKey, userId) ?? process.env.ZERNIO_API_KEY ?? null;
+  const acct = peekSetting(KEYS.zAccount, userId) ?? process.env.ZERNIO_ACCOUNT_ID ?? null;
   return Boolean(key && acct);
 }
 
-export async function primeZernio(): Promise<void> {
-  await zernioConfig();
+export async function primeZernio(userId?: string | null): Promise<void> {
+  await zernioConfig(userId);
 }
 
 async function zFetch(pathname: string, key: string, init?: RequestInit) {
@@ -136,8 +145,8 @@ export async function refreshZernioAccount(cfg: ZernioCfg): Promise<ZernioCfg | 
     accounts.find((a) => (a.platform ?? "instagram") === "instagram") ??
     accounts[0];
   if (!fresh || fresh.id === cfg.accountId) return null;
-  await setSetting(KEYS.zAccount, fresh.id);
-  if (fresh.username) await setSetting(KEYS.igUsername, fresh.username);
+  await setSetting(KEYS.zAccount, fresh.id, cfg.userId);
+  if (fresh.username) await setSetting(KEYS.igUsername, fresh.username, cfg.userId);
   return { ...cfg, accountId: fresh.id };
 }
 
@@ -151,15 +160,20 @@ async function loadBytes(input: ZernioInput): Promise<{
   const rel = input.assetPath ?? "";
   const m = rel.match(/\/api\/videos\/([0-9a-f-]{36})\/file/i);
   if (m) {
-    const file = path.join(process.cwd(), ".media", `${m[1]}.mp4`);
-    if (!existsSync(file)) {
+    const file = await findMediaPath(m[1]);
+    if (!file) {
       // say what happened instead of a raw ENOENT path
       throw new Error(
-        "the downloaded video is no longer on the server — send the link again to re-fetch it",
+        "the video is no longer on the server — send the link again to re-fetch it",
       );
     }
     const bytes = await fs.readFile(file);
-    return { bytes, filename: `${m[1]}.mp4`, contentType: "video/mp4" };
+    const ext = path.extname(file).slice(1).toLowerCase();
+    return {
+      bytes,
+      filename: `${m[1]}.${ext}`,
+      contentType: MEDIA_TYPES[ext] ?? "video/mp4",
+    };
   }
   if (input.videoUrl) {
     const res = await fetch(input.videoUrl, { signal: AbortSignal.timeout(120_000) });

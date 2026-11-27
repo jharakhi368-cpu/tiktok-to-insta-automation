@@ -24,31 +24,32 @@ export async function ensureSeed(): Promise<void> {
   return;
 }
 
-export async function listVideos(): Promise<Video[]> {
+export async function listVideos(userId?: string | null): Promise<Video[]> {
   await ensureSeed();
   await ensureBotRunning();
-  await primeIg();
+  await primeIg(userId);
   // operator order: clips needing work first, armed clips by air time, posts last
   const rank = sql`case ${videos.status}
     when 'intake' then 0 when 'ready' then 1
     when 'scheduled' then 2 when 'publishing' then 2 else 3 end`;
-  return db
+  const query = db
     .select()
     .from(videos)
     .orderBy(rank, asc(videos.scheduledAt), asc(videos.createdAt));
+  return userId ? await query.where(eq(videos.userId, userId)) : await query;
 }
 
 const STARTED_AT = Date.now();
 
-export function envState() {
+export function envState(userId?: string | null) {
   void ensureBotRunning();
-  void primeIg();
+  void primeIg(userId);
   return {
     bot: botConfigured(),
     polling: botPolling(),
     botError: botLastError(),
     botHandle: botHandle(),
-    instagram: igReady(),
+    instagram: igReady(userId),
     scheduler: Boolean((globalThis as { __reelayScheduler?: unknown }).__reelayScheduler),
     schedulerError: (globalThis as { __schedErr?: string | null }).__schedErr ?? null,
     uptimeMs: Date.now() - STARTED_AT,
@@ -105,6 +106,7 @@ export async function publishVideo(v: Video): Promise<Video> {
       videoUrl: await absoluteUrl(current.assetUrl),
       assetPath: current.assetUrl,
       coverPath: current.coverImage,
+      userId: current.userId,
       caption: current.caption,
       shareToStory: current.shareToStory,
       firstComment: current.firstComment,

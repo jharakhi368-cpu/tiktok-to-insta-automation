@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { videos, type VideoStatus } from "@/db/schema";
 import { envState, listVideos, publishVideo } from "@/lib/pipeline";
+import { requireUser } from "@/lib/auth";
 import { ensureBotRunning } from "@/lib/telegram";
 
 export const dynamic = "force-dynamic";
@@ -10,13 +11,21 @@ export const dynamic = "force-dynamic";
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_req: Request, { params }: Ctx) {
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   const { id } = await params;
-  const [row] = await db.select().from(videos).where(eq(videos.id, id)).limit(1);
+  const [row] = await db
+    .select()
+    .from(videos)
+    .where(and(eq(videos.id, id), eq(videos.userId, user.id)))
+    .limit(1);
   if (!row) return NextResponse.json({ error: "not found" }, { status: 404 });
   return NextResponse.json({ video: row });
 }
 
 export async function PATCH(req: Request, { params }: Ctx) {
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   const { id } = await params;
   await ensureBotRunning();
   const body = await req.json().catch(() => ({}));
@@ -46,27 +55,41 @@ export async function PATCH(req: Request, { params }: Ctx) {
   const [updated] = await db
     .update(videos)
     .set(patch)
-    .where(eq(videos.id, id))
+    .where(and(eq(videos.id, id), eq(videos.userId, user.id)))
     .returning();
   if (!updated) return NextResponse.json({ error: "not found" }, { status: 404 });
-  return NextResponse.json({ video: updated, env: envState() });
+  return NextResponse.json({ video: updated, env: envState(user.id) });
 }
 
 export async function DELETE(_req: Request, { params }: Ctx) {
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   const { id } = await params;
-  await db.delete(videos).where(eq(videos.id, id));
-  return NextResponse.json({ ok: true, videos: await listVideos() });
+  await db
+    .delete(videos)
+    .where(and(eq(videos.id, id), eq(videos.userId, user.id)));
+  return NextResponse.json({ ok: true, videos: await listVideos(user.id) });
 }
 
 export async function POST(req: Request, { params }: Ctx) {
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   const { id } = await params;
   const body = await req.json().catch(() => ({}));
 
   if (body.action === "publish") {
-    const [row] = await db.select().from(videos).where(eq(videos.id, id)).limit(1);
+    const [row] = await db
+      .select()
+      .from(videos)
+      .where(and(eq(videos.id, id), eq(videos.userId, user.id)))
+      .limit(1);
     if (!row) return NextResponse.json({ error: "not found" }, { status: 404 });
     const out = await publishVideo(row);
-    return NextResponse.json({ video: out, videos: await listVideos(), env: envState() });
+    return NextResponse.json({
+      video: out,
+      videos: await listVideos(user.id),
+      env: envState(user.id),
+    });
   }
 
   return NextResponse.json({ error: "unknown action" }, { status: 400 });

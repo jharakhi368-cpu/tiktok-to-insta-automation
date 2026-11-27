@@ -18,27 +18,27 @@ const GRAPH = "https://graph.facebook.com/v21.0";
 
 export type IgConfig = { token: string; userId: string };
 
-export async function igConfig(): Promise<IgConfig | null> {
-  const token = (await getSetting(KEYS.igToken)) || process.env.IG_ACCESS_TOKEN || null;
-  const userId = (await getSetting(KEYS.igUserId)) || process.env.IG_BUSINESS_ACCOUNT_ID || null;
+export async function igConfig(who?: string | null): Promise<IgConfig | null> {
+  const token = (await getSetting(KEYS.igToken, who)) || process.env.IG_ACCESS_TOKEN || null;
+  const userId = (await getSetting(KEYS.igUserId, who)) || process.env.IG_BUSINESS_ACCOUNT_ID || null;
   return token && userId ? { token, userId } : null;
 }
 
 /** Which publisher is wired up: Zernio (no Meta app) or the Graph API. */
-export function igProvider(): "zernio" | "graph" | null {
-  if (zernioReady()) return "zernio";
-  const t = peekSetting(KEYS.igToken) ?? process.env.IG_ACCESS_TOKEN ?? null;
-  const u = peekSetting(KEYS.igUserId) ?? process.env.IG_BUSINESS_ACCOUNT_ID ?? null;
+export function igProvider(who?: string | null): "zernio" | "graph" | null {
+  if (zernioReady(who)) return "zernio";
+  const t = peekSetting(KEYS.igToken, who) ?? process.env.IG_ACCESS_TOKEN ?? null;
+  const u = peekSetting(KEYS.igUserId, who) ?? process.env.IG_BUSINESS_ACCOUNT_ID ?? null;
   return t && u ? "graph" : null;
 }
 
 /** sync view used by envState() — accurate once primeIg() has run */
-export function igReady(): boolean {
-  return igProvider() !== null;
+export function igReady(who?: string | null): boolean {
+  return igProvider(who) !== null;
 }
 
-export async function primeIg(): Promise<void> {
-  await Promise.all([igConfig(), primeZernio()]);
+export async function primeIg(who?: string | null): Promise<void> {
+  await Promise.all([igConfig(who), primeZernio(who)]);
 }
 
 /** Validate a token (and optionally the IG account) against the Graph API. */
@@ -119,6 +119,8 @@ export async function publishToInstagram(input: {
   assetPath?: string | null;
   /** our own stored custom cover, e.g. /api/videos/<id>/cover */
   coverPath?: string | null;
+  /** owning account — decides which Zernio/Graph credentials are used */
+  userId?: string | null;
   caption: string;
   shareToStory?: boolean;
   firstComment?: boolean;
@@ -127,7 +129,7 @@ export async function publishToInstagram(input: {
   const z = await zernioConfig();
   if (z) return publishViaZernio(z, input as Parameters<typeof publishViaZernio>[1]);
 
-  const cfg = await igConfig();
+  const cfg = await igConfig(input.userId);
 
   if (!cfg) {
     return {
