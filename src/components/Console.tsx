@@ -16,7 +16,6 @@ export default function ConsoleView() {
           selectedId={c.selectedId}
           onSelect={c.setSelectedId}
           onIntake={c.intake}
-          env={c.env}
           loading={c.loading}
         />
       </section>
