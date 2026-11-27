@@ -19,10 +19,13 @@ const dayKey = (d: Date) =>
 export default function CalendarView() {
   const { videos, now, setSelectedId, publish, busy } = useConsole();
 
-  const [cursor, setCursor] = useState(
-    () => new Date(now.getFullYear(), now.getMonth(), 1),
-  );
-  const [selected, setSelected] = useState(() => dayKey(now));
+  // `now` starts at epoch on the first render (hydration safety), so these are
+  // derived each render instead of being captured once — otherwise the month
+  // freezes at January 1970.
+  const [cursorRaw, setCursor] = useState<Date | null>(null);
+  const [selectedRaw, setSelected] = useState<string | null>(null);
+  const cursor = cursorRaw ?? new Date(now.getFullYear(), now.getMonth(), 1);
+  const selected = selectedRaw ?? dayKey(now);
 
   /** every published reel, bucketed by the day it went out */
   const byDay = useMemo(() => {
@@ -55,7 +58,7 @@ export default function CalendarView() {
   const totalPosted = videos.filter((v) => v.status === "published").length;
 
   const shift = (delta: number) =>
-    setCursor((c) => new Date(c.getFullYear(), c.getMonth() + delta, 1));
+    setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + delta, 1));
 
   return (
     <div className="mx-auto w-full max-w-[1000px] px-5 py-6">
@@ -71,6 +74,13 @@ export default function CalendarView() {
         </p>
       </div>
 
+      {now.getFullYear() < 2000 ? (
+        <div className="glass mt-6 rounded-3xl border border-line px-6 py-16 text-center">
+          <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
+            Loading calendar…
+          </div>
+        </div>
+      ) : (
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         {/* ── month ───────────────────────────────── */}
         <div className="glass refract rounded-3xl border border-line p-4 sm:p-5">
@@ -256,6 +266,7 @@ export default function CalendarView() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }
