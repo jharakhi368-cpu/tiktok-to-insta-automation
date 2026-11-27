@@ -10,6 +10,54 @@ import { COVER_X, dur, relative } from "@/lib/ui";
  * The TikTok submission box is the entry point of the whole product, so it sits
  * at the very top of the console as the hero — never buried below the list.
  */
+
+/** Read a frame + duration out of a chosen file, in the browser. */
+function probeVideo(file: File): Promise<{ thumb?: string; duration?: number }> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const done = (value: { thumb?: string; duration?: number }) => {
+      if (settled) return;
+      settled = true;
+      URL.revokeObjectURL(url);
+      resolve(value);
+    };
+
+    const url = URL.createObjectURL(file);
+    const el = document.createElement("video");
+    el.preload = "metadata";
+    el.muted = true;
+    el.playsInline = true;
+    el.src = url;
+
+    el.onloadeddata = () => {
+      const duration = Number.isFinite(el.duration) ? Math.round(el.duration) : undefined;
+      try {
+        el.currentTime = Math.min(1, (el.duration || 1) * 0.2);
+      } catch {
+        done({ duration });
+      }
+      pending = duration;
+    };
+
+    let pending: number | undefined;
+    el.onseeked = () => {
+      try {
+        const width = 320;
+        const height = Math.round((el.videoHeight / el.videoWidth) * width) || 568;
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d")?.drawImage(el, 0, 0, width, height);
+        done({ thumb: canvas.toDataURL("image/jpeg", 0.82), duration: pending });
+      } catch {
+        done({ duration: pending });
+      }
+    };
+    el.onerror = () => done({});
+    setTimeout(() => done({}), 8000);
+  });
+}
+
 export default function IntakeRail({
   videos,
   selectedId,
@@ -29,7 +77,13 @@ export default function IntakeRail({
   }[];
   selectedId: string | null;
   onSelect: (id: string) => void;
-  onIntake: (p: { url?: string; fileName?: string }) => void;
+  onIntake: (p: {
+    url?: string;
+    fileName?: string;
+    file?: File;
+    thumb?: string;
+    duration?: number;
+  }) => void;
   loading: boolean;
 }) {
   const [url, setUrl] = useState("");
@@ -49,8 +103,16 @@ export default function IntakeRail({
 
   const pick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
-    if (f) onIntake({ fileName: f.name });
     e.target.value = "";
+    if (!f) return;
+    setBusy(true);
+    // grab a poster frame and the duration client-side so the clip doesn't
+    // land in the list with a stock thumbnail
+    probeVideo(f)
+      .then(({ thumb, duration }) => {
+        onIntake({ file: f, thumb, duration });
+      })
+      .catch(() => onIntake({ file: f }));
   };
 
   return (

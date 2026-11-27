@@ -16,10 +16,18 @@
  */
 
 import { promises as fs } from "fs";
-import { existsSync } from "fs";
 import path from "path";
 import { KEYS, getSetting, peekSetting, setSetting } from "./settings";
 import type { PublishResult } from "./instagram";
+import { findMediaPath } from "./tiktok";
+
+const MEDIA_TYPES: Record<string, string> = {
+  mp4: "video/mp4",
+  mov: "video/quicktime",
+  webm: "video/webm",
+  m4v: "video/x-m4v",
+  mkv: "video/x-matroska",
+};
 
 const BASE = () => process.env.ZERNIO_API_URL ?? "https://zernio.com/api/v1";
 
@@ -151,15 +159,20 @@ async function loadBytes(input: ZernioInput): Promise<{
   const rel = input.assetPath ?? "";
   const m = rel.match(/\/api\/videos\/([0-9a-f-]{36})\/file/i);
   if (m) {
-    const file = path.join(process.cwd(), ".media", `${m[1]}.mp4`);
-    if (!existsSync(file)) {
+    const file = await findMediaPath(m[1]);
+    if (!file) {
       // say what happened instead of a raw ENOENT path
       throw new Error(
-        "the downloaded video is no longer on the server — send the link again to re-fetch it",
+        "the video is no longer on the server — send the link again to re-fetch it",
       );
     }
     const bytes = await fs.readFile(file);
-    return { bytes, filename: `${m[1]}.mp4`, contentType: "video/mp4" };
+    const ext = path.extname(file).slice(1).toLowerCase();
+    return {
+      bytes,
+      filename: `${m[1]}.${ext}`,
+      contentType: MEDIA_TYPES[ext] ?? "video/mp4",
+    };
   }
   if (input.videoUrl) {
     const res = await fetch(input.videoUrl, { signal: AbortSignal.timeout(120_000) });
