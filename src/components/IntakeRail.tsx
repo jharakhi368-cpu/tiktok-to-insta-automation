@@ -43,6 +43,47 @@ export default function IntakeRail({
         }
       />
 
+      {/* ── submit a TikTok ─────────────────────────────────── */}
+      <div className="border-b border-line px-4 py-4">
+        <div className="label mb-2">Add a reel</div>
+
+        <form onSubmit={submit} className="flex gap-2">
+          <input
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="Paste a TikTok link…"
+            aria-label="TikTok link"
+            className="min-w-0 flex-1 border border-line bg-white px-3 py-2.5 text-[14px] text-ink outline-none transition-colors placeholder:text-muted focus:border-amber"
+          />
+          <button
+            type="submit"
+            disabled={!url.trim()}
+            className="glass-cta flex items-center gap-1.5 px-4 py-2.5 text-[13px] font-semibold transition-all disabled:opacity-40"
+          >
+            <Send size={13} /> Add
+          </button>
+        </form>
+
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          className="mt-2 w-full border border-dashed border-line px-3 py-2.5 text-[13px] font-semibold text-muted transition-colors hover:border-amber hover:text-amber"
+        >
+          Or choose a video file
+        </button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="video/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) onIntake({ fileName: f.name });
+            e.target.value = "";
+          }}
+        />
+      </div>
+
       <div className="stagger flex-1">
         {loading ? (
           <div className="px-4 py-6 font-mono text-[11px] text-muted">Loading…</div>
