@@ -37,7 +37,7 @@ export default function Nav() {
               }`}
             >
               <span className="flex items-baseline gap-1.5">
-                <span className="font-mono text-[11px] uppercase tracking-[0.16em]">
+                <span className="text-[13px] font-semibold tracking-[-0.01em]">
                   {it.label}
                 </span>
                 {count ? (
@@ -75,7 +75,7 @@ export default function Nav() {
                 : "bg-fault/70"
             }`}
           />
-          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+          <span className="text-[12px] font-semibold tracking-[0.01em] text-muted">
             {env?.scheduler ? "Live" : "Paused"}
           </span>
         </span>

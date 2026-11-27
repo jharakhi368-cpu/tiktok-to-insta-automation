@@ -116,7 +116,7 @@ export default function EditBay({
       <>
         <SectionHead num="02" title="Make your reel" />
         <div className="flex min-h-[320px] flex-col items-center justify-center gap-3 px-6 py-16 text-center">
-          <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
+          <div className="text-[13px] font-semibold tracking-[-0.01em] text-muted">
             No video selected
           </div>
           <p className="max-w-[300px] text-[13.5px] leading-relaxed text-muted">
@@ -190,7 +190,7 @@ export default function EditBay({
         num="02"
         title="Make your reel"
         right={
-          <span className="truncate font-mono text-[10px] uppercase tracking-[0.12em] text-amber">
+          <span className="truncate text-[12px] font-semibold tracking-[0.01em] text-amber">
             {video.origin === "manual" ? "ADDED BY YOU" : "FROM TELEGRAM"}
           </span>
         }
@@ -214,16 +214,16 @@ export default function EditBay({
               <span
                 className={`flex h-[18px] w-[18px] items-center justify-center rounded-full font-mono text-[10px] ${
                   active
-                    ? "bg-amber text-[#101216]"
+                    ? "bg-amber text-white"
                     : done
                       ? "bg-onair/20 text-onair"
-                      : "bg-black/40 text-muted"
+                      : "bg-sunken text-muted"
                 }`}
               >
                 {done ? <Check size={11} /> : n}
               </span>
               <span
-                className={`font-mono text-[10px] uppercase tracking-[0.14em] ${
+                className={`text-[12px] font-semibold tracking-[0.01em] ${
                   active ? "text-ink" : done ? "text-onair" : "text-muted"
                 }`}
               >
@@ -296,7 +296,7 @@ export default function EditBay({
                 <span className="flex h-12 w-12 items-center justify-center rounded-full border border-amber text-amber">
                   <Play size={20} />
                 </span>
-                <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink">
+                <span className="text-[12px] font-semibold tracking-[0.01em] text-ink">
                   Play video
                 </span>
               </button>
@@ -306,7 +306,7 @@ export default function EditBay({
               <button
                 type="button"
                 onClick={() => setPlaying(false)}
-                className="pointer-events-auto absolute left-1.5 top-1.5 bg-black/75 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.12em] text-amber transition-colors hover:bg-black"
+                className="pointer-events-auto absolute left-1.5 top-1.5 bg-black/75 px-2 py-1 text-[10px] font-semibold tracking-[0.01em] text-amber transition-colors hover:bg-black"
               >
                 ← Cover
               </button>
@@ -316,7 +316,7 @@ export default function EditBay({
             <span className="pointer-events-none absolute bottom-1.5 left-1.5 h-3 w-3 border-b-2 border-l-2 border-amber" />
             <span className="pointer-events-none absolute bottom-1.5 right-1.5 h-3 w-3 border-b-2 border-r-2 border-amber" />
             {hasVideo ? (
-              <span className="pointer-events-none absolute right-1.5 top-6 bg-black/75 px-1.5 py-1 font-mono text-[9px] uppercase tracking-[0.12em] text-onair">
+              <span className="pointer-events-none absolute right-1.5 top-6 bg-black/75 px-1.5 py-1 text-[10px] font-semibold tracking-[0.01em] text-onair">
                 Downloaded
               </span>
             ) : null}
@@ -376,7 +376,7 @@ export default function EditBay({
               <div className="label mt-2">Drag to scrub · OG is the original</div>
 
               <div className="mt-2.5 flex gap-1.5">
-                <label className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 border border-line bg-black/30 px-2 py-2 font-mono text-[10px] uppercase tracking-[0.1em] text-muted transition-colors hover:border-amber hover:text-amber">
+                <label className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 border border-line bg-sunken px-2 py-2 text-[12px] font-semibold tracking-[0.01em] text-muted transition-colors hover:border-amber hover:text-amber">
                   <ImagePlus size={12} /> Upload my cover
                   <input
                     type="file"
@@ -393,7 +393,7 @@ export default function EditBay({
                   <button
                     type="button"
                     onClick={() => onCover(id!, null)}
-                    className="border border-line px-2.5 py-2 font-mono text-[10px] uppercase tracking-[0.1em] text-muted transition-colors hover:border-amber hover:text-amber"
+                    className="border border-line px-2.5 py-2 text-[12px] font-semibold tracking-[0.01em] text-muted transition-colors hover:border-amber hover:text-amber"
                   >
                     Use OG
                   </button>
@@ -420,14 +420,14 @@ export default function EditBay({
                 <button
                   type="button"
                   onClick={() => setStep(2)}
-                  className="sheen flex items-center gap-2 bg-amber px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[#101216] transition-all hover:bg-[#ffc355] active:translate-y-px"
+                  className="sheen flex items-center gap-2 bg-amber px-5 py-2.5 text-[13px] font-semibold tracking-[-0.01em] text-white transition-all hover:bg-[#0059c7] active:translate-y-px"
                 >
                   Use this cover <ArrowRight size={13} />
                 </button>
                 <button
                   type="button"
                   onClick={() => onDelete(id!)}
-                  className="ml-auto flex items-center gap-1.5 border border-transparent px-2 py-2.5 font-mono text-[11px] uppercase tracking-[0.14em] text-muted transition-colors hover:border-fault/50 hover:text-fault"
+                  className="ml-auto flex items-center gap-1.5 border border-transparent px-2 py-2.5 text-[13px] font-semibold tracking-[-0.01em] text-muted transition-colors hover:border-fault/50 hover:text-fault"
                 >
                   <Trash2 size={13} /> Delete
                 </button>
@@ -458,7 +458,7 @@ export default function EditBay({
                 rows={8}
                 aria-label="Caption"
                 placeholder="What's this reel about? Write it like you'd say it…"
-                className="mt-2 w-full resize-none border border-line bg-black/40 px-3 py-2.5 text-[14px] leading-relaxed text-ink outline-none transition-colors placeholder:text-muted/70 focus:border-amber"
+                className="mt-2 w-full resize-none border border-line bg-sunken px-3 py-2.5 text-[14px] leading-relaxed text-ink outline-none transition-colors placeholder:text-muted/70 focus:border-amber"
               />
 
               <div className="mt-2.5 flex flex-wrap gap-1.5">
@@ -481,7 +481,7 @@ export default function EditBay({
                 })}
               </div>
 
-              <div className="mt-4 border border-line bg-panel/60 px-3">
+              <div className="mt-4 border border-line rounded-2xl bg-panel/60 px-3">
                 <Toggle
                   checked={first}
                   onChange={(v) => {
@@ -506,7 +506,7 @@ export default function EditBay({
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="flex items-center gap-2 border border-line px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.14em] text-muted transition-colors hover:border-amber hover:text-amber"
+                  className="flex items-center gap-2 border border-line px-4 py-2.5 text-[13px] font-semibold tracking-[-0.01em] text-muted transition-colors hover:border-amber hover:text-amber"
                 >
                   <ArrowLeft size={13} /> Back
                 </button>
@@ -516,7 +516,7 @@ export default function EditBay({
                     flushCaption();
                     setStep(3);
                   }}
-                  className="sheen flex items-center gap-2 bg-amber px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[#101216] transition-all hover:bg-[#ffc355] active:translate-y-px"
+                  className="sheen flex items-center gap-2 bg-amber px-5 py-2.5 text-[13px] font-semibold tracking-[-0.01em] text-white transition-all hover:bg-[#0059c7] active:translate-y-px"
                 >
                   Save caption <ArrowRight size={13} />
                 </button>
@@ -537,7 +537,7 @@ export default function EditBay({
                 <button
                   type="button"
                   onClick={() => setPickCustom(true)}
-                  className="flex items-center justify-between border border-amber/60 bg-amber/10 px-4 py-4 text-left text-amber transition-colors hover:bg-amber hover:text-[#101216]"
+                  className="flex items-center justify-between border border-amber/60 bg-amber/10 px-4 py-4 text-left text-amber transition-colors hover:bg-amber hover:text-white"
                 >
                   <span className="text-[15px] font-semibold">Schedule post</span>
                   <CalendarClock size={16} />
@@ -546,7 +546,7 @@ export default function EditBay({
                   type="button"
                   onClick={postNow}
                   disabled={busy}
-                  className="flex items-center justify-between border border-onair/50 bg-onair/10 px-4 py-4 text-left text-onair transition-colors hover:bg-onair hover:text-[#101216] disabled:opacity-50"
+                  className="flex items-center justify-between border border-onair/50 bg-onair/10 px-4 py-4 text-left text-onair transition-colors hover:bg-onair hover:text-white disabled:opacity-50"
                 >
                   <span className="text-[15px] font-semibold">
                     {busy ? "Posting…" : "Post now"}
@@ -568,7 +568,7 @@ export default function EditBay({
                       setStep(4);
                     }}
                     disabled={busy}
-                    className="mt-3 flex items-center gap-2 bg-amber px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[#101216] transition-all hover:bg-[#ffc355] active:translate-y-px disabled:opacity-50"
+                    className="mt-3 flex items-center gap-2 bg-amber px-5 py-2.5 text-[13px] font-semibold tracking-[-0.01em] text-white transition-all hover:bg-[#0059c7] active:translate-y-px disabled:opacity-50"
                   >
                     Confirm schedule <ArrowRight size={13} />
                   </button>
@@ -581,7 +581,7 @@ export default function EditBay({
                 </p>
               )}
 
-              <div className="mt-4 border border-line bg-panel/60 px-3">
+              <div className="mt-4 border border-line rounded-2xl bg-panel/60 px-3">
                 <Toggle
                   checked={auto}
                   onChange={(v) => {
@@ -601,7 +601,7 @@ export default function EditBay({
                 <button
                   type="button"
                   onClick={() => setStep(2)}
-                  className="flex items-center gap-2 border border-line px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.14em] text-muted transition-colors hover:border-amber hover:text-amber"
+                  className="flex items-center gap-2 border border-line px-4 py-2.5 text-[13px] font-semibold tracking-[-0.01em] text-muted transition-colors hover:border-amber hover:text-amber"
                 >
                   <ArrowLeft size={13} /> Back
                 </button>
@@ -647,7 +647,7 @@ export default function EditBay({
                     type="button"
                     onClick={() => onPublish(id!)}
                     disabled={busy}
-                    className="mt-4 border border-fault/60 px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.14em] text-fault transition-colors hover:bg-fault hover:text-[#101216] disabled:opacity-50"
+                    className="mt-4 border border-fault/60 px-4 py-2.5 text-[13px] font-semibold tracking-[-0.01em] text-fault transition-colors hover:bg-fault hover:text-white disabled:opacity-50"
                   >
                     {busy ? "Trying…" : "Try again"}
                   </button>
@@ -684,21 +684,21 @@ export default function EditBay({
                       type="button"
                       onClick={postNow}
                       disabled={busy}
-                      className="sheen flex items-center gap-2 bg-amber px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[#101216] transition-all hover:bg-[#ffc355] active:translate-y-px disabled:opacity-50"
+                      className="sheen flex items-center gap-2 bg-amber px-5 py-2.5 text-[13px] font-semibold tracking-[-0.01em] text-white transition-all hover:bg-[#0059c7] active:translate-y-px disabled:opacity-50"
                     >
                       <Zap size={13} /> {busy ? "Posting…" : "Post now instead"}
                     </button>
                     <button
                       type="button"
                       onClick={() => setStep(3)}
-                      className="border border-line px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.14em] text-muted transition-colors hover:border-amber hover:text-amber"
+                      className="border border-line px-4 py-2.5 text-[13px] font-semibold tracking-[-0.01em] text-muted transition-colors hover:border-amber hover:text-amber"
                     >
                       Change time
                     </button>
                     <button
                       type="button"
                       onClick={() => onQueue(id!, null)}
-                      className="border border-line px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.14em] text-muted transition-colors hover:border-fault hover:text-fault"
+                      className="border border-line px-4 py-2.5 text-[13px] font-semibold tracking-[-0.01em] text-muted transition-colors hover:border-fault hover:text-fault"
                     >
                       Remove from schedule
                     </button>
@@ -708,14 +708,14 @@ export default function EditBay({
                     <button
                       type="button"
                       onClick={onReset}
-                      className="flex items-center gap-2 border border-line px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.14em] text-muted transition-colors hover:border-amber hover:text-amber"
+                      className="flex items-center gap-2 border border-line px-4 py-2.5 text-[13px] font-semibold tracking-[-0.01em] text-muted transition-colors hover:border-amber hover:text-amber"
                     >
                       Start the next one
                     </button>
                     <button
                       type="button"
                       onClick={() => setStep(1)}
-                      className="border border-line px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.14em] text-muted transition-colors hover:border-amber hover:text-amber"
+                      className="border border-line px-4 py-2.5 text-[13px] font-semibold tracking-[-0.01em] text-muted transition-colors hover:border-amber hover:text-amber"
                     >
                       Edit this reel
                     </button>

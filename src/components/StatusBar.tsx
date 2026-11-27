@@ -58,18 +58,16 @@ export default function StatusBar({
   const intake = videos.filter((v) => v.status === "intake" || v.status === "ready").length;
 
   return (
-    <header className="grain relative shrink-0 overflow-hidden border-b border-line">
-      <img
-        src="images/rack.jpg"
-        alt=""
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-40"
-      />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-base via-base/92 to-base/55" />
+    <header className="relative shrink-0 overflow-hidden border-b border-line bg-panel/75 backdrop-blur-xl">
+      {/* system-blue wash, barely there — Apple headers are never flat */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -left-24 top-1/2 h-64 w-[420px] -translate-y-1/2 rounded-full bg-amber/25 blur-[90px]"
-        style={{ animation: "breathe 7s ease-in-out infinite" }}
+        className="pointer-events-none absolute -left-40 -top-32 h-80 w-[560px] rounded-full bg-amber/12 blur-[110px]"
+        style={{ animation: "breathe 8s ease-in-out infinite" }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-24 top-0 h-56 w-[380px] rounded-full bg-onair/8 blur-[110px]"
       />
 
       <div className="relative flex flex-wrap items-end justify-between gap-x-8 gap-y-5 px-5 py-4">

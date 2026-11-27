@@ -13,7 +13,7 @@ export function Pill({ status }: { status: string }) {
   const meta = STATUS[status] ?? { label: status.toUpperCase(), tone: "grey" as Tone };
   return (
     <span
-      className={`inline-flex items-center gap-1.5 border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em] ${TONE[meta.tone]}`}
+      className={`inline-flex items-center gap-1.5 border px-1.5 py-0.5 text-[10px] font-semibold tracking-[0.01em] ${TONE[meta.tone]}`}
     >
       <span
         className={`h-1 w-1 rounded-full ${
@@ -72,7 +72,7 @@ export function Toggle({
     >
       <span className="min-w-0">
         <span
-          className={`block font-mono text-[11px] uppercase tracking-[0.14em] transition-colors ${
+          className={`block text-[13px] font-semibold tracking-[-0.01em] transition-colors ${
             checked ? "text-ink" : "text-muted"
           } group-hover:text-ink`}
         >
@@ -84,7 +84,7 @@ export function Toggle({
       </span>
       <span
         className={`relative h-[18px] w-[34px] shrink-0 border transition-colors ${
-          checked ? "border-amber bg-amber/25" : "border-line bg-black/40"
+          checked ? "border-amber bg-amber/25" : "border-line bg-sunken"
         }`}
       >
         <span

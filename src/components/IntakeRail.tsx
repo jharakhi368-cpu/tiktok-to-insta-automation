@@ -83,7 +83,7 @@ export default function IntakeRail({
                   <span className="block truncate text-[13px] font-semibold leading-tight">
                     {v.title}
                   </span>
-                  <span className="mt-1 block truncate font-mono text-[10px] uppercase tracking-[0.1em] text-muted">
+                  <span className="mt-1 block truncate text-[12px] font-semibold tracking-[0.01em] text-muted">
                     {dur(v.durationSec)} · {v.origin} · {relative(v.createdAt)}
                   </span>
                   <span className="mt-1.5 block">
