@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Make REELAY live — one click</title>
+<style>
+  :root{--blue:#0071e3;--ink:#1c1c1e;--muted:#6e6e73;--line:#e2e2e7;--base:#f2f2f7;
+        --green:#1f9d4a;--red:#d70015}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--base);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,
+       "SF Pro Text","Helvetica Neue",system-ui,sans-serif;font-size:16px;line-height:1.55;
+       letter-spacing:-.01em;-webkit-font-smoothing:antialiased;padding:40px 20px 80px}
+  .wrap{max-width:720px;margin:0 auto}
+  h1{font-size:42px;font-weight:800;letter-spacing:-.04em;line-height:1.05}
+  .sub{color:var(--muted);margin-top:12px;font-size:17px;max-width:52ch}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:20px}
+  .card h2{font-size:17px;font-weight:600;display:flex;gap:10px;align-items:center}
+  .num{display:inline-flex;width:24px;height:24px;border-radius:50%;background:var(--blue);
+       color:#fff;font-size:13px;font-weight:700;align-items:center;justify-content:center;flex:0 0 24px}
+  .done .num{background:var(--green)}
+  p{color:var(--muted);font-size:14.5px;margin-top:8px}
+  .btn{display:block;width:100%;margin-top:22px;padding:17px;border-radius:14px;border:0;
+       background:var(--blue);color:#fff;font-size:17px;font-weight:600;text-align:center;
+       text-decoration:none;box-shadow:0 14px 30px -14px rgba(0,91,187,.65);cursor:pointer}
+  .btn:active{transform:scale(.985)}
+  .btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:none}
+  code{background:#f2f2f7;padding:3px 7px;border-radius:7px;font-family:"SF Mono",ui-monospace,Menlo,monospace;
+       font-size:13px;display:inline-block;margin-top:6px}
+  .field{margin-top:10px}
+  .field input,.field textarea{width:100%;padding:14px;border:1px solid var(--line);border-radius:12px;
+       font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:13px;margin-top:6px;resize:vertical}
+  .row{display:flex;gap:10px;align-items:center;margin-top:10px}
+  .pill{padding:5px 11px;border-radius:999px;background:#f2f2f7;font-size:13px;color:var(--muted)}
+  .ok{background:#e6f6ec;color:#12622f}.bad{background:#fdeaea;color:var(--red)}
+  .hidden{display:none}
+  a{text-decoration:none;color:var(--blue)}
+  .note{border-left:3px solid var(--blue);padding:2px 0 2px 14px;margin-top:14px;color:var(--muted);font-size:14px}
+  .cta-row{display:flex;gap:10px;margin-top:14px}
+  .cta-row .btn{margin-top:0;padding:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Make REELAY live</h1>
+  <p class="sub">Code is already pushed to <b>main</b> and deploy-ready. Four screens, no card.
+     Every step opens in a new tab so you don't lose this checklist.</p>
+
+  <!-- 1 -->
+  <div class="card" id="s1">
+    <h2><span class="num">1</span> Create the database <span class="pill hidden" id="p1">Neon</span></h2>
+    <p>Neon gives you free Postgres. No card, no expiry.</p>
+    <a class="btn" href="https://neon.tech" target="_blank" rel="noreferrer">Open neon.tech ↗</a>
+    <p>Sign in with GitHub → <b>New project</b> → copy the connection string (looks like
+       <code>postgresql://user:pass@ep-xxx.aws.neon.tech/neondb</code>) and paste it below.</p>
+    <div class="field">
+      <label for="db">Your Neon connection string</label>
+      <textarea id="db" rows="2" placeholder="postgresql://…"></textarea>
+    </div>
+    <div class="row"><span class="pill" id="dbcheck">waiting…</span></div>
+    <div class="note">Keep it safe — this is your database credential. You'll paste it twice more.</div>
+  </div>
+
+  <!-- 2 -->
+  <div class="card" id="s2">
+    <h2><span class="num">2</span> Deploy to Render</h2>
+    <p>Render builds straight from your GitHub repo. Free tier, no card.</p>
+    <a class="btn" id="renderLink" href="https://render.com" target="_blank" rel="noreferrer">Open render.com ↗</a>
+    <p>Dashboard → <b>New</b> → <b>Web Service</b> → pick
+       <b>jharakhi368-cpu/tiktok-to-insta-automation</b>.</p>
+    <p>Build <code>npm ci &amp;&amp; npm run build</code> · Start <code>npm run start</code></p>
+    <div class="field">
+      <label for="db2">Then add environment variable</label>
+      <input id="db2" readonly placeholder="DATABASE_URL — paste the same string here">
+    </div>
+    <p>Render prints your URL when it finishes. Paste it below.</p>
+    <div class="field">
+      <label for="url">Your Render URL</label>
+      <input id="url" placeholder="https://your-app.onrender.com">
+    </div>
+    <div class="row"><span class="pill" id="urlcheck">waiting…</span></div>
+  </div>
+
+  <!-- 3 -->
+  <div class="card" id="s3">
+    <h2><span class="num">3</span> Create the tables</h2>
+    <p>Two tables. Run this once, with your Neon string in place of the placeholder.</p>
+    <code id="cmd" style="word-break:break-all">DATABASE_URL="…" npx drizzle-kit push</code>
+    <p>Replit / GitHub Codespaces works if you don't have a terminal.</p>
+    <div class="row"><span class="pill" id="tcheck">waiting…</span></div>
+  </div>
+
+  <!-- 4 -->
+  <div class="card" id="s4">
+    <h2><span class="num">4</span> Keep it awake</h2>
+    <p>Free hosts sleep after 15 min. This pings every 5 min so posts go out on time.</p>
+    <a class="btn" href="https://uptimerobot.com" target="_blank" rel="noreferrer">Open uptimerobot.com ↗</a>
+    <p>Add monitor → HTTP(s) → paste the tick URL below → every 5 minutes.</p>
+    <div class="field">
+      <label for="tick">Monitor URL</label>
+      <input id="tick" readonly placeholder="https://your-app.onrender.com/api/tick">
+    </div>
+    <div class="row"><span class="pill" id="acheck">waiting…</span></div>
+  </div>
+
+  <!-- 5 -->
+  <div class="card" id="s5">
+    <h2><span class="num">5</span> Link Instagram + Telegram</h2>
+    <p>On your live URL. Tokens are stored in the database, not in code.</p>
+    <div class="cta-row">
+      <a class="btn ghost" id="igLink" href="#" target="_blank" rel="noreferrer">Instagram →</a>
+      <a class="btn ghost" id="botLink" href="#" target="_blank" rel="noreferrer">Telegram →</a>
+    </div>
+    <div class="note">Instagram: paste your Zernio key and connect. Telegram: paste the token
+      from @BotFather, then tap <b>Turn on webhook</b>.</div>
+  </div>
+
+  <div class="card hidden" id="done">
+    <h2><span class="num">✓</span> You're live</h2>
+    <p id="doneUrl">Your app is up.</p>
+    <a class="btn" id="finalLink" href="#">Open your app ↗</a>
+  </div>
+
+  <p class="sub" style="margin-top:28px;font-size:14px">
+    Every field saves locally in this browser, so refreshing the page won't lose anything.
+  </p>
+</div>
+
+<script>
+const DB="reelay_db", URL="reelay_url";
+const $=id=>document.getElementById(id);
+const get=k=>localStorage.getItem(k)||"";
+const norm=v=>v.trim().replace(/\/$/,"");
+const valid=v=>/^postgres(ql)?:\/\/\S+:\S+@\S+\.\S+\//.test(v);
+const validUrl=v=>/^https:\/\/[\w.-]+\.[a-z]{2,}/i.test(v);
+
+// restore
+$("db").value=get(DB); $("url").value=get(URL);
+
+function tickUrl(){const u=norm($("url").value);return validUrl(u)?u+"/api/tick":"";}
+function base(){const u=norm($("url").value);return validUrl(u)?u:"";}
+
+function refresh(){
+  const db=$("db").value.trim(), u=norm($("url").value);
+  // 1
+  const dbok=valid(db);
+  $("dbcheck").textContent = !db ? "waiting…" : dbok ? "✓ valid format" : "doesn't look like a Postgres string";
+  $("dbcheck").className = "pill " + (!db ? "" : dbok ? "ok" : "bad");
+  if(dbok){$("s1").classList.add("done");$("p1").classList.remove("hidden");}
+  $("db2").value = dbok ? db : "";
+  // 2
+  const uok=validUrl(u);
+  $("urlcheck").textContent = !u ? "waiting…" : uok ? "✓ looks good" : "needs https://…";
+  $("urlcheck").className = "pill " + (!u ? "" : uok ? "ok" : "bad");
+  if(uok){$("s2").classList.add("done");$("p2").classList.remove("hidden");}
+  // 3
+  $("cmd").textContent = 'DATABASE_URL="'+(dbok?db:'…')+'" npx drizzle-kit push';
+  $("tcheck").textContent = dbok&&uok ? "run it, then you're set" : "waiting for steps 1 + 2";
+  $("tcheck").className = "pill " + (dbok&&uok ? "ok" : "");
+  // 4
+  $("tick").value = tickUrl()||"https://your-app.onrender.com/api/tick";
+  $("acheck").textContent = uok ? "use this URL ✓" : "waiting for step 2";
+  $("acheck").className = "pill " + (uok ? "ok" : "");
+  // 5 + done
+  if(uok){
+    $("s5").classList.remove("hidden");
+    $("igLink").href=u+"/ig"; $("botLink").href=u+"/bot";
+    $("done").classList.remove("hidden");
+    $("doneUrl").textContent = "Live at "+u;
+    $("finalLink").href=u;
+  } else { $("s5").classList.add("hidden"); $("done").classList.add("hidden"); }
+}
+
+$("db").addEventListener("input",e=>{localStorage.setItem(DB,e.target.value);refresh();});
+$("url").addEventListener("input",e=>{localStorage.setItem(URL,e.target.value);refresh();});
+
+// deep link straight into Render's blueprint flow if repo is public
+fetch("https://api.github.com/repos/jharakhi368-cpu/tiktok-to-insta-automation")
+  .then(r=>r.json())
+  .then(d=>{
+    if(d&&d.private===false){
+      $("renderLink").href="https://dashboard.render.com/select-repo?type=web";
+    }
+  }).catch(()=>{});
+
+refresh();
+</script>
+</body>
+</html>
