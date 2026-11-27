@@ -20,7 +20,7 @@ const plex = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "REELAY — TT → IG Relay Console",
   description:
-    "Telegram intake, cover-frame control, caption composer and a scheduling playout log that pushes your TikToks to Instagram.",
+    "Pick a cover, write the caption, set an air time — REELAY publishes your TikToks to Instagram as Reels.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

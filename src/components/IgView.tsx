@@ -19,7 +19,7 @@ type IgState = {
 };
 
 const Z_STEPS = [
-  { n: "01", t: "Sign up at zernio.com", d: "The first two Instagram accounts are free — no card needed to start." },
+  { n: "01", t: "Sign up at zernio.com", d: "Connect your Instagram account — one key covers every post." },
   { n: "02", t: "Connect Instagram in Zernio", d: "One click inside their dashboard. No Meta app, no OAuth, no app review." },
   { n: "03", t: "Create an API key", d: "Zernio → Settings → API keys → copy it (it starts with sk_)." },
   { n: "04", t: "Paste it below", d: "REELAY lists your connected accounts and picks the Instagram one automatically." },

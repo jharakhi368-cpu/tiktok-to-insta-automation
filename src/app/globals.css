@@ -117,6 +117,124 @@
   }
 }
 
+/* ── premium motion ─────────────────────────────────────────── */
+
+/** entrance: content settles up into place */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/** light sweeping across a primary button on hover */
+@keyframes sweep {
+  from {
+    transform: translateX(-140%);
+  }
+  to {
+    transform: translateX(140%);
+  }
+}
+
+/** slow, barely-there breathing for ambient glow */
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.32;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/** poster eases in behind the playhead */
+@keyframes posterIn {
+  from {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@layer components {
+  .rise {
+    animation: rise 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  }
+
+  /** children cascade in,45ms apart */
+  .stagger > * {
+    animation: rise 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  }
+  .stagger > *:nth-child(1) { animation-delay: 30ms; }
+  .stagger > *:nth-child(2) { animation-delay: 75ms; }
+  .stagger > *:nth-child(3) { animation-delay: 120ms; }
+  .stagger > *:nth-child(4) { animation-delay: 165ms; }
+  .stagger > *:nth-child(5) { animation-delay: 210ms; }
+  .stagger > *:nth-child(6) { animation-delay: 255ms; }
+  .stagger > *:nth-child(7) { animation-delay: 300ms; }
+  .stagger > *:nth-child(8) { animation-delay: 345ms; }
+  .stagger > *:nth-child(n + 9) { animation-delay: 390ms; }
+
+  /** rows and cards lift on hover */
+  .lift {
+    transition:
+      transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1),
+      border-color 0.3s ease,
+      box-shadow 0.3s ease,
+      background-color 0.3s ease;
+  }
+  .lift:hover {
+    transform: translateY(-3px);
+    border-color: rgba(255, 176, 32, 0.42);
+    box-shadow:
+      0 20px 44px -26px rgba(0, 0, 0, 0.9),
+      0 0 0 1px rgba(255, 176, 32, 0.1);
+  }
+
+  /** primary button: light sweeps across on hover */
+  .sheen {
+    position: relative;
+    overflow: hidden;
+  }
+  .sheen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      105deg,
+      transparent 38%,
+      rgba(255, 255, 255, 0.4) 50%,
+      transparent 62%
+    );
+    transform: translateX(-140%);
+  }
+  .sheen:hover::after {
+    animation: sweep 0.75s ease-out;
+  }
+
+  .poster-in {
+    animation: posterIn 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

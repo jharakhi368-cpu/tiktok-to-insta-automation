@@ -43,7 +43,7 @@ export function SectionHead({
   right?: ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 border-b border-line px-4 py-3">
+    <div className="rise flex items-center gap-3 border-b border-line px-4 py-3">
       <span className="font-mono text-[11px] font-medium text-amber">{num}</span>
       <span className="label flex-1">{title}</span>
       {right}

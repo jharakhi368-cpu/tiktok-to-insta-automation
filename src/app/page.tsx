@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Console — REELAY",
-  description: "Telegram intake, cover frame, caption and air time for one clip.",
+  description: "Create a reel: pick the cover, write the caption, set the air time.",
 };
 
 export default function Page() {

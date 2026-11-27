@@ -130,7 +130,7 @@ export default function PostedView() {
             {posted.map((v) => (
               <article
                 key={v.id}
-                className="group flex gap-3 border border-line bg-panel/60 p-3 transition-all hover:border-amber/50 hover:bg-raise"
+                className="lift group flex gap-3 border border-line bg-panel/60 p-3"
               >
                 <div className="relative aspect-[9/16] w-[74px] shrink-0 overflow-hidden border border-line bg-black">
                   <img

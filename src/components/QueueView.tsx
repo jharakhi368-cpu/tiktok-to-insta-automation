@@ -38,7 +38,7 @@ export default function QueueView() {
   return (
     <div className="mx-auto w-full max-w-[1100px] px-5 py-6">
       {/* next post hero */}
-      <div className="relative overflow-hidden border border-line bg-panel/70">
+      <div className="rise relative overflow-hidden border border-line bg-panel/70">
         <div className="grid gap-5 p-5 md:grid-cols-[130px_minmax(0,1fr)]">
           <div className="relative aspect-[9/16] w-[130px] overflow-hidden border border-line bg-black">
             {next ? (
@@ -101,7 +101,7 @@ export default function QueueView() {
                       type="button"
                       onClick={() => publish(next.id)}
                       disabled={busy}
-                      className="flex items-center gap-2 bg-amber px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[#101216] transition-all hover:bg-[#ffc355] active:translate-y-px disabled:opacity-50"
+                      className="sheen flex items-center gap-2 bg-amber px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[#101216] transition-all hover:bg-[#ffc355] active:translate-y-px disabled:opacity-50"
                     >
                       <Zap size={13} /> Post now
                     </button>
@@ -146,7 +146,7 @@ export default function QueueView() {
           scheduled.map((v) => (
             <div
               key={v.id}
-              className={`grid grid-cols-[64px_minmax(0,1fr)_auto] items-center gap-3 border-b border-line px-3 py-3 transition-colors ${
+              className={`lift grid grid-cols-[64px_minmax(0,1fr)_auto] items-center gap-3 border-b border-line px-3 py-3 ${
                 flashId === v.id ? "animate-[stamp_.4s_ease-out]" : "hover:bg-panel"
               }`}
             >
@@ -226,7 +226,7 @@ export default function QueueView() {
           waiting.map((v) => (
             <div
               key={v.id}
-              className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-3 py-3 transition-colors hover:bg-panel"
+              className="lift flex flex-wrap items-center justify-between gap-3 border-b border-line px-3 py-3"
             >
               <div className="flex min-w-0 items-center gap-3">
                 <img

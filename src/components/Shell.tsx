@@ -9,7 +9,7 @@ function Frame({ children, variant }: { children: ReactNode; variant: "console" 
   const { toast, now, env, videos, fault } = useConsole();
 
   return (
-    <div className="flex min-h-screen flex-col lg:h-screen lg:overflow-hidden">
+    <div className="flex min-h-screen animate-[fadeIn_.45s_ease-out] flex-col lg:h-screen lg:overflow-hidden">
       <StatusBar now={now} env={env} videos={videos} fault={fault} />
       <Nav />
       <main
