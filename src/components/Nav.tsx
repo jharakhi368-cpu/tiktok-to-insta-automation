@@ -8,6 +8,7 @@ const ITEMS = [
   { href: "/", label: "Console", sub: "create" },
   { href: "/queue", label: "Queue", sub: "scheduled" },
   { href: "/posted", label: "Posted", sub: "history" },
+  { href: "/calendar", label: "Calendar", sub: "by day" },
   { href: "/ig", label: "Instagram", sub: "connected" },
 ];
 
@@ -22,7 +23,7 @@ export default function Nav() {
   };
 
   return (
-    <nav className="sticky top-0 z-30 flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-line bg-panel/80 px-4 backdrop-blur-xl">
+    <nav className="sticky top-0 z-30 flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-1 glass border-b border-line px-5">
       <div className="flex flex-wrap">
         {ITEMS.map((it, i) => {
           const active = path === it.href;

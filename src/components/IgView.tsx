@@ -173,7 +173,7 @@ export default function IgView() {
               <button
                 type="submit"
                 disabled={busy || !zKey.trim()}
-                className="flex items-center gap-2 bg-amber px-5 py-2.5 text-[13px] font-semibold tracking-[-0.01em] text-white transition-all hover:bg-[#0059c7] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex items-center gap-2 glass-cta px-5 py-2.5 text-[13px] font-semibold tracking-[-0.01em] transition-all disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Plug size={13} /> {busy ? "Checking…" : "Connect"}
               </button>
@@ -190,7 +190,7 @@ export default function IgView() {
           </form>
 
           {/* status */}
-          <div className="mt-5 border border-line rounded-2xl bg-panel/60 p-4">
+          <div className="mt-5 glass border border-line rounded-2xl p-4">
             <div className="flex items-center justify-between">
               <span className="label">Connection</span>
               <span
@@ -330,7 +330,7 @@ export default function IgView() {
         <div>
           <SectionHead num="11" title="What goes out" />
 
-          <div className="mt-4 border border-line rounded-2xl bg-panel/60 p-3">
+          <div className="mt-4 glass border border-line rounded-2xl p-3">
             <div className="mx-auto w-[150px]">
               <div className="relative aspect-[9/16] overflow-hidden border border-line bg-black">
                 <img
@@ -365,7 +365,7 @@ export default function IgView() {
             </div>
           </div>
 
-          <div className="mt-5 border border-line rounded-2xl bg-panel/60">
+          <div className="mt-5 glass border border-line rounded-2xl">
             <div className="label border-b border-line px-3 py-2.5">Publish spec</div>
             {SPEC.map(([k, v]) => (
               <div

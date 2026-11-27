@@ -9,7 +9,22 @@ function Frame({ children, variant }: { children: ReactNode; variant: "console" 
   const { toast, now, env, videos, fault } = useConsole();
 
   return (
-    <div className="flex min-h-screen animate-[fadeIn_.45s_ease-out] flex-col lg:h-screen lg:overflow-hidden">
+    <div className="relative flex min-h-screen animate-[fadeIn_.45s_ease-out] flex-col lg:h-screen lg:overflow-hidden">
+      {/* ambient colour that the glass surfaces refract */}
+      <div
+        aria-hidden="true"
+        className="blob -left-40 top-[-10%] h-[460px] w-[460px] bg-[#0071e3]/22"
+      />
+      <div
+        aria-hidden="true"
+        className="blob -right-32 top-[35%] h-[420px] w-[420px] bg-[#1f9d4a]/16"
+        style={{ animationDelay: "-9s" }}
+      />
+      <div
+        aria-hidden="true"
+        className="blob left-[30%] bottom-[-15%] h-[380px] w-[380px] bg-[#e1306c]/12"
+        style={{ animationDelay: "-17s" }}
+      />
       <StatusBar now={now} env={env} videos={videos} fault={fault} />
       <Nav />
       <main

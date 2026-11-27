@@ -16,96 +16,12 @@ import {
 
 export { COVER_X } from "./ui";
 
-const SEED: (typeof videos.$inferInsert)[] = [
-  {
-    title: "Midnight wok — 30 second pad kra pao",
-    thumb: "/images/v1.jpg",
-    origin: "telegram",
-    sourceRef: "tg:4821",
-    durationSec: 31,
-    status: "scheduled",
-    caption:
-      "30 seconds of fire. The wok never sleeps. 🍳\n\nFull recipe in bio — this is the one you've been asking for.",
-    coverFrame: 2,
-    publishMode: "auto",
-    firstComment: true,
-    shareToStory: true,
-    scheduledAt: new Date(Date.now() + 42 * 60_000),
-  },
-  {
-    title: "Kickflip over the plaza ledge",
-    thumb: "/images/v2.jpg",
-    origin: "telegram",
-    sourceRef: "tg:4818",
-    durationSec: 14,
-    status: "scheduled",
-    caption:
-      "Seventh try. Landed it before the streetlights came on. ⚡\n\nShot on the A7 at 120fps.",
-    coverFrame: 3,
-    publishMode: "auto",
-    firstComment: true,
-    shareToStory: false,
-    scheduledAt: new Date(Date.now() + 3.4 * 3600_000),
-  },
-  {
-    title: "Chalk day — 140kg pause deadlift",
-    thumb: "/images/v3.jpg",
-    origin: "telegram",
-    sourceRef: "tg:4812",
-    durationSec: 22,
-    status: "ready",
-    caption: "Pause at the knee. Drive through the floor. No straps, no belt.",
-    coverFrame: 1,
-    publishMode: "auto",
-    firstComment: false,
-    shareToStory: false,
-    scheduledAt: null,
-  },
-  {
-    title: "Coast road, golden hour",
-    thumb: "/images/v4.jpg",
-    origin: "telegram",
-    sourceRef: "tg:4805",
-    durationSec: 45,
-    status: "published",
-    caption: "Took the long way home. 🌅\n\nSound on for the engine.",
-    coverFrame: 4,
-    publishMode: "auto",
-    firstComment: true,
-    shareToStory: true,
-    scheduledAt: new Date(Date.now() - 26 * 3600_000),
-    publishedAt: new Date(Date.now() - 26 * 3600_000),
-    igMediaId: "SIM-SEED0004",
-  },
-  {
-    title: "The perfect pull, 18g in / 36g out",
-    thumb: "/images/v5.jpg",
-    origin: "telegram",
-    sourceRef: "tg:4801",
-    durationSec: 19,
-    status: "intake",
-    caption: "",
-    coverFrame: 2,
-    publishMode: "auto",
-    firstComment: true,
-    shareToStory: false,
-    scheduledAt: null,
-  },
-];
-
-let seeded: Promise<void> | null = null;
-
+/**
+ * Kept so existing call sites still work — deliberately inserts nothing.
+ * The app starts with an empty inbox; only real clips you add appear.
+ */
 export async function ensureSeed(): Promise<void> {
-  if (!seeded) {
-    seeded = (async () => {
-      const existing = await db.select({ id: videos.id }).from(videos).limit(1);
-      if (existing.length === 0) await db.insert(videos).values(SEED);
-    })().catch((e) => {
-      seeded = null;
-      throw e;
-    });
-  }
-  return seeded;
+  return;
 }
 
 export async function listVideos(): Promise<Video[]> {

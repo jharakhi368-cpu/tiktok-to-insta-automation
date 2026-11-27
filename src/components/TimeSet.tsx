@@ -132,7 +132,7 @@ export default function TimeSet({ value, onChange, now }: Props) {
   const dateInput = `${local.getFullYear()}-${pad(local.getMonth() + 1)}-${pad(local.getDate())}`;
 
   return (
-    <div className="border border-line rounded-2xl bg-panel/60 p-3">
+    <div className="glass border border-line rounded-2xl p-3">
       <div className="flex items-center justify-between">
         <span className="label">Air time · custom set</span>
         <span className="font-mono text-[11px] tabular-nums text-amber">{cd}</span>
