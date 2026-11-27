@@ -7,6 +7,10 @@ out/
 build/
 next-env.d.ts
 
+# generated archives
+.deploy-kit.tar.gz
+*.tar.gz
+
 # environment / secrets — never commit
 .env
 .env.local
