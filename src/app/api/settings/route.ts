@@ -12,6 +12,18 @@ import {
   verifyToken,
 } from "@/lib/telegram";
 
+import { describeDbError, hintFor } from "@/lib/otp";
+
+function dbError(e: unknown): { message: string; code: string | null; hint: string | null } {
+  const info = describeDbError(e);
+  const hint = hintFor(info.code);
+  return {
+    message: hint ? `${info.message} — ${hint}` : info.message,
+    code: info.code ?? null,
+    hint: hint ?? null,
+  };
+}
+
 export const dynamic = "force-dynamic";
 
 async function state() {
@@ -76,7 +88,7 @@ export async function GET(req: Request) {
     return NextResponse.json(await state());
   } catch (e) {
     return NextResponse.json(
-      { error: e instanceof Error ? e.message : "settings failed" },
+      { ...dbError(e) },
       { status: 500 },
     );
   }
@@ -150,7 +162,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, ...(await state()) });
   } catch (e) {
     return NextResponse.json(
-      { error: e instanceof Error ? e.message : "link failed" },
+      { ...dbError(e) },
       { status: 500 },
     );
   }
@@ -167,7 +179,7 @@ export async function DELETE() {
     return NextResponse.json({ ok: true, ...(await state()) });
   } catch (e) {
     return NextResponse.json(
-      { error: e instanceof Error ? e.message : "unlink failed" },
+      { ...dbError(e) },
       { status: 500 },
     );
   }
