@@ -46,10 +46,13 @@ export const videos = pgTable("videos", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-  /** owning account — rows made before sign-up belong to the sentinel */
-  userId: uuid("user_id")
-    .notNull()
-    .default("00000000-0000-0000-0000-000000000000"),
+  /**
+   * owning account. Nullable on purpose: rows that predate the account (or
+   * arrive without one, e.g. from the bot) stay unowned and are simply
+   * invisible to every dashboard query — they are never reassigned or deleted.
+   * Web inserts always set this explicitly to the signed-in user.
+   */
+  userId: uuid("user_id"),
 });
 
 /** key/value store — telegram bot token, handle, chat id, etc. */
