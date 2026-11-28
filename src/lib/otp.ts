@@ -2,7 +2,6 @@ import { randomInt, timingSafeEqual } from "crypto";
 import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { otps, users, type User } from "@/db/schema";
-import { claimOrphans } from "./auth";
 import { KEYS, getSetting } from "./settings";
 
 const TTL_MS = 10 * 60_000; //10 minutes
@@ -315,8 +314,6 @@ export async function verifyOtp(rawEmail: string, rawCode: string): Promise<Veri
   let user = found[0];
   if (!user) {
     [user] = await db.insert(users).values({ email }).returning();
-    // first account picks up anything created before auth existed
-    await claimOrphans(user.id);
   }
 
   return { ok: true, user };

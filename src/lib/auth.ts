@@ -6,8 +6,6 @@ import { sessions, settings, users, videos, type User } from "@/db/schema";
 
 export const SESSION_COOKIE = "reelay_session";
 const TTL_SECONDS = 60 * 60 * 24 * 30; //30 days
-/** owns rows created before any account existed; reassigned on first sign-up */
-export const SENTINEL_USER = "00000000-0000-0000-0000-000000000000";
 
 /* ── passwords ───────────────────────────────────────────────── */
 
@@ -107,29 +105,3 @@ export async function requireUser(): Promise<User | null> {
  * Give the first account everything that was created before sign-up, so a
  * deploy that predates auth doesn't orphan the existing data.
  */
-/**
- * Per-account keys only. Telegram and site settings stay in the global scope
- * on purpose: the bot and scheduler are singletons that read them without a
- * request context, so claiming them would stop the bot dead.
- */
-const PER_ACCOUNT_KEYS = [
-  "ig_access_token",
-  "ig_business_account_id",
-  "ig_username",
-  "zernio_api_key",
-  "zernio_account_id",
-];
-
-export async function claimOrphans(userId: string): Promise<void> {
-  try {
-    await db.update(videos).set({ userId }).where(eq(videos.userId, SENTINEL_USER));
-    await db
-      .update(settings)
-      .set({ userId })
-      .where(
-        and(eq(settings.userId, SENTINEL_USER), inArray(settings.key, PER_ACCOUNT_KEYS)),
-      );
-  } catch {
-    /* never abort sign-up over a claim — the account is already created */
-  }
-}
