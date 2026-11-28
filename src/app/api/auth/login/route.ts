@@ -2,12 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
-import {
-  createSession,
-  isSecureRequest,
-  setSessionCookie,
-  verifyPassword,
-} from "@/lib/auth";
+import { createSession, setSessionCookie, verifyPassword } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -34,9 +29,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Email or password is incorrect." }, { status: 401 });
     }
 
-    await setSessionCookie(await createSession(user.id), {
-      secure: isSecureRequest(req),
-    });
+    await setSessionCookie(await createSession(user.id), req);
     return NextResponse.json({ user: { id: user.id, email: user.email } });
   } catch (e) {
     return NextResponse.json(

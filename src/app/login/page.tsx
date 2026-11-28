@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type Mode = "signin" | "signup";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,9 +36,20 @@ export default function LoginPage() {
         setError(d.error ?? "Something went wrong.");
         return;
       }
-      // full page load: guarantees the new cookie rides along, unlike an
-      // RSC navigation which can race the Set-Cookie being applied
-      window.location.assign(next);
+
+      // the session cookie must be in place before we navigate, otherwise the
+      // middleware bounces straight back here and it looks like nothing happened
+      const me = await fetch("/api/auth/me", { cache: "no-store" });
+      if (!me.ok) {
+        setError(
+          "Signed in, but the session could not be kept — open this page over HTTPS.",
+        );
+        return;
+      }
+
+      setError(null);
+      router.replace(next);
+      router.refresh();
     } catch {
       setError("Could not reach the server.");
     } finally {
