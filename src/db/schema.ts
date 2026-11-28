@@ -59,9 +59,8 @@ export const videos = pgTable("videos", {
 export const settings = pgTable(
   "settings",
   {
-    userId: uuid("user_id")
-      .notNull()
-      .default("00000000-0000-0000-0000-000000000000"),
+    userId: uuid("user_id").notNull(),
+    // no default — every write resolves a real account id
     key: text("key").notNull(),
     value: text("value").notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })

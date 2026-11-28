@@ -1,6 +1,6 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { settings } from "@/db/schema";
+import { settings, users } from "@/db/schema";
 
 export const KEYS = {
   tgToken: "telegram_bot_token",
@@ -17,8 +17,6 @@ export const KEYS = {
   resendKey: "resend_api_key", // email delivery for sign-in codes
 } as const;
 
-/** Rows created before any account existed live here, until claimed. */
-export const GLOBAL_SCOPE = "00000000-0000-0000-0000-000000000000";
 
 /**
  * The key/value store is per account: the primary key is (user_id, key), so
@@ -26,16 +24,49 @@ export const GLOBAL_SCOPE = "00000000-0000-0000-0000-000000000000";
  * user reads the global scope, which is where system settings live.
  */
 const cache = new Map<string, string | null>();
-const ck = (key: string, userId?: string | null) => `${userId ?? GLOBAL_SCOPE}:${key}`;
+const SYSTEM = "__system__"; // cache slot for keys read without a request context
+const ck = (key: string, userId?: string | null) => `${userId ?? SYSTEM}:${key}`;
 
+
+/**
+ * Which account owns this setting.
+ *
+ * With no user in scope (bot callbacks, the scheduler) we resolve the primary
+ * account — there is no zero-UUID fallback any more. Returns null only when no
+ * account exists yet, so nothing is written into a void.
+ */
+async function ownerFor(userId?: string | null): Promise<string | null> {
+  if (userId) return userId;
+  try {
+    const rows = await db
+      .select({ id: users.id })
+      .from(users)
+      .orderBy(asc(users.createdAt))
+      .limit(1);
+    return rows[0]?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+
+/**
+ * Resolve the owning account for a settings key.
+ *
+ * With no user in scope (bot callbacks, the scheduler) we resolve the primary
+ * account by creation order. There is no zero-UUID fallback, so a write can
+ * never land under the synthetic id again. Returns null only when no account
+ * exists at all, in which case the write is skipped rather than corrupted.
+ */
 export async function getSetting(
   key: string,
   userId?: string | null,
 ): Promise<string | null> {
   const cacheKey = ck(key, userId);
   if (cache.has(cacheKey)) return cache.get(cacheKey)!;
+  const scope = await ownerFor(userId);
+  if (!scope) return null;
   try {
-    const scope = userId ?? GLOBAL_SCOPE;
     const rows = await db
       .select({ value: settings.value })
       .from(settings)
@@ -55,8 +86,13 @@ export async function setSetting(
   userId?: string | null,
 ): Promise<void> {
   const cacheKey = ck(key, userId);
+  const scope = await ownerFor(userId);
+  if (!scope) {
+    // no account exists yet — never write into a synthetic owner
+    console.warn(`[settings] skipped ${key}: no account exists to own it`);
+    return;
+  }
   cache.set(cacheKey, value);
-  const scope = userId ?? GLOBAL_SCOPE;
   if (value === null) {
     await db
       .delete(settings)
@@ -76,8 +112,9 @@ export async function getMany(
   keys: string[],
   userId?: string | null,
 ): Promise<Record<string, string | null>> {
-  const scope = userId ?? GLOBAL_SCOPE;
   const out: Record<string, string | null> = {};
+  const scope = await ownerFor(userId);
+  if (!scope) return out;
   for (const k of keys) out[k] = null;
   try {
     const rows = await db

@@ -119,10 +119,10 @@ export async function POST(req: Request) {
         accounts.find((a) => (a.platform ?? "instagram") === "instagram") ??
         accounts[0];
 
-      await setSetting(KEYS.zKey, key);
-      await setSetting(KEYS.zAccount, chosen!.id);
-      await setSetting(KEYS.igUsername, chosen!.username ?? null);
-      await primeIg();
+      await setSetting(KEYS.zKey, key, user.id);
+      await setSetting(KEYS.zAccount, chosen!.id, user.id);
+      await setSetting(KEYS.igUsername, chosen!.username ?? null, user.id);
+      await primeIg(user.id);
 
       return NextResponse.json({ ok: true, ...(await state()) });
     }
@@ -151,10 +151,10 @@ export async function POST(req: Request) {
       );
     }
 
-    await setSetting(KEYS.igToken, token);
-    if (check.userId) await setSetting(KEYS.igUserId, check.userId);
-    if (check.username) await setSetting(KEYS.igUsername, check.username);
-    await primeIg();
+    await setSetting(KEYS.igToken, token, user.id);
+    if (check.userId) await setSetting(KEYS.igUserId, check.userId, user.id);
+    if (check.username) await setSetting(KEYS.igUsername, check.username, user.id);
+    await primeIg(user.id);
 
     return NextResponse.json({ ok: true, ...(await state()) });
   } catch (e) {
