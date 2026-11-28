@@ -93,8 +93,32 @@ export async function POST(req: Request) {
     // this key would receive your codes)
     if (body.action === "email") {
       const key = String(body.apiKey ?? "").trim();
+
+      // Validate before storing, so a wrong key fails here — immediately and
+      // visibly — instead of on the next sign-in attempt.
+      if (key) {
+        try {
+          const res = await fetch("https://api.resend.com/api-keys", {
+            headers: { Authorization: `Bearer ${key}` },
+            signal: AbortSignal.timeout(10_000),
+          });
+          if (!res.ok) {
+            const d = (await res.json().catch(() => ({}))) as { message?: string };
+            return NextResponse.json(
+              { error: `Resend rejected this key: ${d.message ?? res.status}` },
+              { status: 400 },
+            );
+          }
+        } catch (e) {
+          return NextResponse.json(
+            { error: `Could not reach Resend: ${e instanceof Error ? e.message : "network error"}` },
+            { status: 502 },
+          );
+        }
+      }
+
       await setSetting(KEYS.resendKey, key || null);
-      return NextResponse.json({ ok: true, configured: Boolean(key) });
+      return NextResponse.json({ ok: true, configured: Boolean(key), verified: Boolean(key) });
     }
 
     // switch between webhook mode (free hosts that sleep) and long polling
