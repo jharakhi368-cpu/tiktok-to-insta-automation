@@ -1,5 +1,5 @@
 import { randomInt, timingSafeEqual } from "crypto";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { otps, users, type User } from "@/db/schema";
 import { claimOrphans } from "./auth";
@@ -82,6 +82,82 @@ async function sendCode(email: string, code: string): Promise<SendResult> {
   }
 }
 
+
+/** Never let a connection string or credential reach a log line. */
+function describeDbError(e: unknown): { code?: string; message: string } {
+  const err = e as { code?: string; message?: string };
+  const message = String(err?.message ?? e)
+    .replace(/postgres(?:ql)?:\/\/[^\s@]+@/gi, "postgres://[redacted]@")
+    .replace(/(?:password|token|key)\s*=\s*[^\s,;]+/gi, "$1=[redacted]");
+  return { code: err?.code, message };
+}
+
+type SchemaStatus = { ok: true } | { ok: false; error: string };
+
+/**
+ * ON CONFLICT ("email") needs a real PRIMARY KEY on that column. If the table
+ * was never pushed to this database — or was created without the constraint —
+ * PostgreSQL rejects the upsert with a confusing error, so check first and say
+ * exactly what is missing.
+ */
+export async function checkOtpSchema(): Promise<SchemaStatus> {
+  try {
+    const res = (await db.execute(sql`
+      SELECT
+        EXISTS (
+          SELECT 1 FROM information_schema.tables
+          WHERE table_schema = 'public' AND table_name = 'otps'
+        ) AS has_table,
+        EXISTS (
+          SELECT 1 FROM information_schema.table_constraints
+          WHERE table_schema = 'public' AND table_name = 'otps'
+            AND constraint_type = 'PRIMARY KEY'
+        ) AS has_pk,
+        EXISTS (
+          SELECT 1 FROM pg_index i
+          WHERE i.indrelid = 'otps'::regclass
+            AND i.indisunique
+            AND (
+              SELECT string_agg(a.attname, ', ' ORDER BY k.ord)
+                FROM unnest(i.indkey) WITH ORDINALITY AS k(attnum, ord)
+                JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = k.attnum
+            ) = 'email'
+        ) AS has_unique_email,
+        EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public' AND table_name = 'otps'
+            AND column_name = 'email'
+        ) AS has_email
+    `)) as unknown as { rows?: Array<Record<string, boolean>> };
+    const row = res.rows?.[0];
+
+    if (!row) return { ok: true }; // driver returned nothing — don't block login
+    if (!row.has_table) {
+      return {
+        ok: false,
+        error:
+          "The otps table does not exist on this database. Run: node scripts/fix-otps.mjs",
+      };
+    }
+    if (!row.has_email) {
+      return { ok: false, error: 'The otps table has no "email" column.' };
+    }
+    // ON CONFLICT ("email") is satisfied by a primary key OR a unique index
+    if (!row.has_pk && !row.has_unique_email) {
+      return {
+        ok: false,
+        error:
+          'The otps table has no PRIMARY KEY or unique index on "email", so ON CONFLICT ("email") cannot work. Run: node scripts/fix-otps.mjs',
+      };
+    }
+    return { ok: true };
+  } catch (e) {
+    // never block sign-in because a diagnostic query failed
+    console.error("[otp] schema check failed", describeDbError(e));
+    return { ok: true };
+  }
+}
+
 export type OtpResult =
   | { ok: true; devCode?: string; emailed: boolean }
   | { ok: false; error: string };
@@ -104,15 +180,47 @@ export async function requestOtp(rawEmail: string): Promise<OtpResult> {
   recent.push(now);
   sends.set(email, recent);
 
+  const schema = await checkOtpSchema();
+  if (!schema.ok) return { ok: false, error: schema.error };
+
   const code = String(randomInt(100000, 1000000));
   const expiresAt = new Date(Date.now() + TTL_MS);
-  await db
-    .insert(otps)
-    .values({ email, code, expiresAt, attempts: 0, createdAt: new Date() })
-    .onConflictDoUpdate({
-      target: otps.email,
-      set: { code, expiresAt, attempts: 0, createdAt: new Date() },
-    });
+  const row = { code, expiresAt, attempts: 0, createdAt: new Date() };
+
+  try {
+    await db
+      .insert(otps)
+      .values({ email, ...row })
+      .onConflictDoUpdate({
+        target: otps.email,
+        set: { code, expiresAt, attempts: 0, createdAt: new Date() },
+      });
+  } catch (e) {
+    // Log the real PostgreSQL error (code + message, credentials redacted)
+    // instead of letting it vanish behind a generic500.
+    const info = describeDbError(e);
+    console.error("[otp] insert failed", info.code ?? "", info.message);
+
+    // The upsert needs a unique index on email. If this database does not have
+    // one, fall back to UPDATE-then-INSERT so sign-in still works.
+    try {
+      const updated = await db
+        .update(otps)
+        .set({ code, expiresAt, attempts: 0, createdAt: new Date() })
+        .where(eq(otps.email, email))
+        .returning({ email: otps.email });
+      if (!updated.length) {
+        await db.insert(otps).values({ email, ...row });
+      }
+      console.warn(
+        `[otp] used fallback upsert (no unique index on otps.email) — run: node scripts/fix-otps.mjs`,
+      );
+    } catch (fallbackError) {
+      const fb = describeDbError(fallbackError);
+      console.error("[otp] fallback upsert failed", fb.code ?? "", fb.message);
+      throw e; // surface the ORIGINAL error to the caller
+    }
+  }
 
   const sent = await sendCode(email, code);
   if (sent.ok) return { ok: true, emailed: true };

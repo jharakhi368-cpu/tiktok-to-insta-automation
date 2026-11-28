@@ -104,3 +104,31 @@ Set these in the host's dashboard. **Names only — never commit values.**
 | `TELEGRAM_BOT_TOKEN` | no | can be linked in `/bot` instead |
 | `IG_ACCESS_TOKEN` / `IG_BUSINESS_ACCOUNT_ID` | no | Graph API alternative to Zernio |
 | `SCHEDULER_INTERVAL_MS` | no | scheduler tick, default `15000` |
+
+## Fixing `ON CONFLICT ("email")` on OTP inserts
+
+If sign-in fails with an error mentioning `otps` or `ON CONFLICT`, the table on
+**that** database is missing or lacks a unique key on `email`.
+
+```bash
+DATABASE_URL="your-connection-string" node scripts/fix-otps.mjs
+```
+
+The script inspects the live schema first and:
+
+- creates `otps` with `CREATE TABLE IF NOT EXISTS` if it is absent
+- checks every column name and type against what the app expects
+- **refuses to add a uniqueness constraint while duplicate emails exist** — it
+  lists them (masked) instead of deleting anything
+- adds `PRIMARY KEY (email)` only when there are no duplicates
+- is idempotent, and never prints the connection string
+
+At runtime the app performs the same check before inserting and returns this
+message instead of a raw PostgreSQL error:
+
+> The otps table has no PRIMARY KEY or unique index on "email", so
+> ON CONFLICT ("email") cannot work. Run: node scripts/fix-otps.mjs
+
+If the upsert still fails, the app logs the PostgreSQL error code and message
+(credentials redacted) under the `[otp]` prefix and falls back to an
+update-then-insert so sign-in keeps working.
