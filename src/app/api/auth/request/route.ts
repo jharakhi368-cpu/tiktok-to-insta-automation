@@ -16,8 +16,21 @@ export async function POST(req: Request) {
       devCode: "devCode" in result ? result.devCode : undefined,
     });
   } catch (e) {
+    // Surface the real cause: Drizzle's wrapper keeps the PostgreSQL code and
+    // message on `cause`, which is why this failure was previously invisible.
+    const { describeDbError, hintFor } = await import("@/lib/otp");
+    const info = describeDbError(e);
+    const hint = hintFor(info.code);
+    console.error(
+      "[otp] request failed",
+      JSON.stringify({ code: info.code ?? null, hint: hint ?? null, message: info.message }),
+    );
     return NextResponse.json(
-      { error: e instanceof Error ? e.message : "Could not send a code" },
+      {
+        error: hint ? `${info.message} — ${hint}` : info.message,
+        code: info.code ?? null,
+        hint: hint ?? null,
+      },
       { status: 500 },
     );
   }
