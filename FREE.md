@@ -54,9 +54,16 @@ Open **/ig** → paste the Zernio key → **Connect**. They are stored in the
 database, so they never go in a config file or a git repo.
 
 ###6. Keep it awake — UptimeRobot
+
+> **Use `/api/health`, not `/api/tick`.** `/api/tick` runs the scheduler
+> inline — it does real publishing work and can take a long time, so a monitor
+> pointing at it reports **DOWN** while the app is healthy. `/api/health` is a
+> fast `select 1` and is the correct liveness check. Any request still wakes
+> the service, and the scheduler runs on its own in-process interval.
+
 Sign up (no card) → **Add monitor**:
 - Type: `HTTP(s)`
-- URL: `https://your-app.onrender.com/api/tick`
+- URL: `https://your-app.onrender.com/api/health`
 - Interval: **5 minutes**
 
 Every ping wakes the service **and** runs the scheduler, so due posts go out

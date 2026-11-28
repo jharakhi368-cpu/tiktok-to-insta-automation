@@ -4,6 +4,20 @@ import { ensureSchedulerRunning } from "@/lib/scheduler";
 import { currentUser } from "@/lib/auth";
 import { KEYS, peekSetting, setSetting } from "@/lib/settings";
 
+import { describeDbError, hintFor } from "@/lib/otp";
+
+function buildError(e: unknown): string {
+  const info = describeDbError(e);
+  const hint = hintFor(info.code);
+  return hint ? `${info.message} — ${hint}` : info.message;
+}
+function codeOf(e: unknown): string | null {
+  return describeDbError(e).code ?? null;
+}
+function hintOf(e: unknown): string | undefined {
+  return hintFor(describeDbError(e).code);
+}
+
 export const dynamic = "force-dynamic";
 
 /** Called by the console every few seconds: runs due posts, reports status. */
@@ -32,7 +46,7 @@ export async function GET(req: Request) {
     });
   } catch (e) {
     return NextResponse.json(
-      { error: e instanceof Error ? e.message : "tick failed", env: envState() },
+        { error: buildError(e), code: codeOf(e), hint: hintOf(e) },
       { status: 500 },
     );
   }
