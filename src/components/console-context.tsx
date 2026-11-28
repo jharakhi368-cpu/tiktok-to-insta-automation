@@ -35,7 +35,13 @@ type ConsoleApi = {
   patch: (id: string, body: Record<string, unknown>) => Promise<VideoDTO | null>;
   publish: (id: string) => Promise<void>;
   queue: (id: string, scheduledAt: string | null) => Promise<void>;
-  intake: (p: { url?: string; fileName?: string }) => Promise<void>;
+  intake: (p: {
+    url?: string;
+    fileName?: string;
+    file?: File;
+    thumb?: string;
+    duration?: number;
+  }) => Promise<void>;
   remove: (id: string) => Promise<void>;
   clearHistory: (scope?: "history" | "all") => Promise<number>;
   uploadCover: (id: string, file: File | null) => Promise<void>;
@@ -97,9 +103,19 @@ export function ConsoleProvider({ children }: { children: ReactNode }) {
     setNow(new Date());
     let alive = true;
     fetch("/api/videos")
-      .then((r) => r.json())
-      .then((d: ApiResp) => {
+      .then(async (r) => {
         if (!alive) return;
+        const type = r.headers.get("content-type") ?? "";
+        // 401 = the session row is gone; HTML instead of JSON = middleware
+        // redirected us. Either way the signed-out user belongs on /login.
+        if (r.status === 401 || r.redirected || !type.includes("application/json")) {
+          window.location.replace("/login");
+          return null;
+        }
+        return (await r.json()) as ApiResp;
+      })
+      .then((d) => {
+        if (!alive || !d) return;
         merge(d);
         setLoading(false);
         if (d.error) setFault(d.error);
@@ -222,13 +238,29 @@ export function ConsoleProvider({ children }: { children: ReactNode }) {
   );
 
   const intake = useCallback(
-    async (payload: { url?: string; fileName?: string }) => {
+    async (payload: {
+      url?: string;
+      fileName?: string;
+      file?: File;
+      thumb?: string;
+      duration?: number;
+    }) => {
       try {
-        const r = await fetch("/api/videos", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        // a real file must be sent as multipart — the bytes, not the filename
+        let r: Response;
+        if (payload.file) {
+          const fd = new FormData();
+          fd.append("file", payload.file);
+          if (payload.thumb) fd.append("thumb", payload.thumb);
+          if (payload.duration) fd.append("duration", String(payload.duration));
+          r = await fetch("/api/videos/upload", { method: "POST", body: fd });
+        } else {
+          r = await fetch("/api/videos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: payload.url, fileName: payload.fileName }),
+          });
+        }
         const d = (await r.json()) as ApiResp;
         if (!r.ok) {
           notify(d.error ?? "Intake failed");

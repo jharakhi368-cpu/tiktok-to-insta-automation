@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useConsole } from "./console-context";
 
 const ITEMS = [
@@ -10,7 +11,41 @@ const ITEMS = [
   { href: "/posted", label: "Posted", sub: "history" },
   { href: "/calendar", label: "Calendar", sub: "by day" },
   { href: "/ig", label: "Instagram", sub: "connected" },
+  { href: "/settings", label: "Settings", sub: "account" },
 ];
+
+function SignOut() {
+  const [email, setEmail] = useState<string | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setEmail(d?.user?.email ?? null))
+      .catch(() => undefined);
+  }, []);
+
+  if (!email) return null;
+
+  return (
+    <span className="flex items-center gap-3">
+      <span className="hidden max-w-[190px] truncate font-mono text-[11px] text-muted sm:inline">
+        {email}
+      </span>
+      <button
+        type="button"
+        onClick={async () => {
+          await fetch("/api/auth/logout", { method: "POST" }).catch(() => undefined);
+          router.replace("/login");
+          router.refresh();
+        }}
+        className="rounded-lg border border-line px-2.5 py-1.5 font-mono text-[10px] text-muted transition-colors hover:border-fault hover:text-fault"
+      >
+        Sign out
+      </button>
+    </span>
+  );
+}
 
 export default function Nav() {
   const { videos, env, tickAt } = useConsole();
@@ -67,7 +102,8 @@ export default function Nav() {
         })}
       </div>
 
-      <div className="flex items-center gap-5 py-2">
+      <div className="flex items-center gap-4 py-2">
+        <SignOut />
         <span className="flex items-center gap-2">
           <span
             className={`h-[6px] w-[6px] rounded-full ${

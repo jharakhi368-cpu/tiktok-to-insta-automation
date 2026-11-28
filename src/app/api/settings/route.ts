@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { envState } from "@/lib/pipeline";
-import { KEYS, getMany, setSetting } from "@/lib/settings";
+import { KEYS, getMany, getSetting, setSetting } from "@/lib/settings";
+import { requireUser } from "@/lib/auth";
 import {
   botHandle,
   botPolling,
@@ -22,7 +23,12 @@ async function state() {
   ]);
   const token = await resolveToken();
   await ensureBotRunning();
+  const emailKey = await getSetting(KEYS.resendKey);
   return {
+    email: {
+      configured: Boolean(emailKey || process.env.RESEND_API_KEY),
+      source: emailKey ? "stored" : process.env.RESEND_API_KEY ? "env" : null,
+    },
     telegram: {
       webhook: stored[KEYS.tgWebhook] ?? null,
       linked: Boolean(token),
@@ -59,6 +65,8 @@ async function setWebhookMode(body: Record<string, unknown>) {
 
 export async function GET(req: Request) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
     const url = new URL(req.url);
     if (url.searchParams.get("test") === "1") {
       const token = await resolveToken();
@@ -77,7 +85,17 @@ export async function GET(req: Request) {
 /** Link (or relink) the Telegram bot. */
 export async function POST(req: Request) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
     const body = await req.json().catch(() => ({}));
+
+    // email delivery for sign-in codes (authenticated: an attacker setting
+    // this key would receive your codes)
+    if (body.action === "email") {
+      const key = String(body.apiKey ?? "").trim();
+      await setSetting(KEYS.resendKey, key || null);
+      return NextResponse.json({ ok: true, configured: Boolean(key) });
+    }
 
     // switch between webhook mode (free hosts that sleep) and long polling
     if (body.action === "webhook") {
@@ -117,6 +135,8 @@ export async function POST(req: Request) {
 /** Unlink the bot. */
 export async function DELETE() {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
     await setSetting(KEYS.tgToken, null);
     await setSetting(KEYS.tgHandle, null);
     await stopBot();

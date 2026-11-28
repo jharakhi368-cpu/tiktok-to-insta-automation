@@ -2,6 +2,7 @@ import {
   boolean,
   integer,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uuid,
@@ -45,16 +46,64 @@ export const videos = pgTable("videos", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
+  /** owning account — rows made before sign-up belong to the sentinel */
+  userId: uuid("user_id")
+    .notNull()
+    .default("00000000-0000-0000-0000-000000000000"),
 });
 
 /** key/value store — telegram bot token, handle, chat id, etc. */
-export const settings = pgTable("settings", {
-  key: text("key").primaryKey(),
-  value: text("value").notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
+export const settings = pgTable(
+  "settings",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .default("00000000-0000-0000-0000-000000000000"),
+    key: text("key").notNull(),
+    value: text("value").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({ pk: primaryKey({ columns: [t.userId, t.key] }) }),
+);
+
+/** A login. Passwords are scrypt hashes, never plaintext. */
+export const users = pgTable("users", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: text("email").notNull().unique(),
+  /** optional: sign-in is email + one-time code, so no password is required */
+  passwordHash: text("password_hash"),
+  createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
 });
+
+/** A signed-in session; the cookie carries only this random token. */
+export const sessions = pgTable("sessions", {
+  token: text("token").primaryKey(),
+  userId: uuid("user_id").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+/** A one-time sign-in code. Single active code per email, short-lived. */
+export const otps = pgTable("otps", {
+  email: text("email").primaryKey(),
+  code: text("code").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  attempts: integer("attempts").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export type Otp = typeof otps.$inferSelect;
+
+export type User = typeof users.$inferSelect;
+export type Session = typeof sessions.$inferSelect;
 
 export type Video = typeof videos.$inferSelect;
 export type NewVideo = typeof videos.$inferInsert;

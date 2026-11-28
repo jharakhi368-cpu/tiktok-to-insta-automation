@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { envState } from "@/lib/pipeline";
+import { requireUser, currentUser } from "@/lib/auth";
 import { igProvider, igReady, primeIg, verifyInstagram } from "@/lib/instagram";
 import { listZernioAccounts, verifyZernio } from "@/lib/zernio";
 import { KEYS, getMany, setSetting } from "@/lib/settings";
@@ -14,13 +15,13 @@ const ALL_KEYS = [
   KEYS.zAccount,
 ];
 
-async function state() {
-  const s = await getMany(ALL_KEYS);
-  await primeIg();
+async function state(userId?: string | null) {
+  const s = await getMany(ALL_KEYS, userId);
+  await primeIg(userId);
   return {
-    provider: igProvider(),
+    provider: igProvider(userId),
     instagram: {
-      linked: igReady(),
+      linked: igReady(userId),
       source: s[KEYS.zKey]
         ? "zernio"
         : s[KEYS.igToken]
@@ -43,15 +44,17 @@ async function state() {
         keyTail: s[KEYS.zKey] ? `…${s[KEYS.zKey]!.slice(-4)}` : null,
       },
     },
-    env: envState(),
+    env: envState(userId),
   };
 }
 
 export async function GET(req: Request) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
     const url = new URL(req.url);
     if (url.searchParams.get("test") === "1") {
-      const s = await getMany(ALL_KEYS);
+      const s = await getMany(ALL_KEYS, user.id);
       if (s[KEYS.zKey]) {
         const { verifyZernio: v } = await import("@/lib/zernio");
         return NextResponse.json(await v(s[KEYS.zKey]!));
@@ -60,7 +63,7 @@ export async function GET(req: Request) {
       if (!token) return NextResponse.json({ ok: false, error: "No Instagram account linked yet." });
       return NextResponse.json(await verifyInstagram(token, s[KEYS.igUserId] ?? undefined));
     }
-    return NextResponse.json(await state());
+    return NextResponse.json(await state(user.id));
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "settings failed" },
@@ -72,11 +75,13 @@ export async function GET(req: Request) {
 /** Link Instagram through Zernio (preferred) or the Meta Graph API. */
 export async function POST(req: Request) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
     const body = await req.json().catch(() => ({}));
 
     // ── refresh the stored account id (after a reconnect in Zernio) ──
     if (body.action === "refresh") {
-      const s = await getMany(ALL_KEYS);
+      const s = await getMany(ALL_KEYS, user.id);
       const key = s[KEYS.zKey];
       if (!key) {
         return NextResponse.json({ error: "No Zernio key linked yet." }, { status: 400 });
@@ -92,10 +97,10 @@ export async function POST(req: Request) {
         accounts.find((a) => a.id === s[KEYS.zAccount]) ??
         accounts.find((a) => (a.platform ?? "instagram") === "instagram") ??
         accounts[0];
-      await setSetting(KEYS.zAccount, fresh.id);
-      if (fresh.username) await setSetting(KEYS.igUsername, fresh.username);
-      await primeIg();
-      return NextResponse.json({ ok: true, ...(await state()) });
+      await setSetting(KEYS.zAccount, fresh.id, user.id);
+      if (fresh.username) await setSetting(KEYS.igUsername, fresh.username, user.id);
+      await primeIg(user.id);
+      return NextResponse.json({ ok: true, ...(await state(user.id)) });
     }
 
     // ── Zernio: one API key, no Meta app ─────────────────────────
@@ -163,9 +168,11 @@ export async function POST(req: Request) {
 /** Unlink Instagram — publishes fall back to SIMULATED. */
 export async function DELETE() {
   try {
-    for (const k of ALL_KEYS) await setSetting(k, null);
-    await primeIg();
-    return NextResponse.json({ ok: true, ...(await state()) });
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
+    for (const k of ALL_KEYS) await setSetting(k, null, user.id);
+    await primeIg(user.id);
+    return NextResponse.json({ ok: true, ...(await state(user.id)) });
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "unlink failed" },
