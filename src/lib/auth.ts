@@ -45,15 +45,31 @@ export async function destroySession(token: string): Promise<void> {
   await db.delete(sessions).where(eq(sessions.token, token));
 }
 
-export async function setSessionCookie(token: string): Promise<void> {
+export async function setSessionCookie(
+  token: string,
+  opts: { secure?: boolean } = {},
+): Promise<void> {
   const store = await cookies();
   store.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    // Derive from the actual request, not NODE_ENV: a Secure cookie sent over
+    // http:// is discarded by the browser, which logs you straight back out.
+    secure: opts.secure ?? false,
     path: "/",
     maxAge: TTL_SECONDS,
   });
+}
+
+/** Was this request received over HTTPS (directly or via a proxy)? */
+export function isSecureRequest(req: Request): boolean {
+  const forwarded = req.headers.get("x-forwarded-proto");
+  if (forwarded) return forwarded.split(",")[0].trim() === "https";
+  try {
+    return new URL(req.url).protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 export async function clearSessionCookie(): Promise<void> {
@@ -104,11 +120,15 @@ const PER_ACCOUNT_KEYS = [
 ];
 
 export async function claimOrphans(userId: string): Promise<void> {
-  await db.update(videos).set({ userId }).where(eq(videos.userId, SENTINEL_USER));
-  await db
-    .update(settings)
-    .set({ userId })
-    .where(
-      and(eq(settings.userId, SENTINEL_USER), inArray(settings.key, PER_ACCOUNT_KEYS)),
-    );
+  try {
+    await db.update(videos).set({ userId }).where(eq(videos.userId, SENTINEL_USER));
+    await db
+      .update(settings)
+      .set({ userId })
+      .where(
+        and(eq(settings.userId, SENTINEL_USER), inArray(settings.key, PER_ACCOUNT_KEYS)),
+      );
+  } catch {
+    /* never abort sign-up over a claim — the account is already created */
+  }
 }

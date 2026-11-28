@@ -6,6 +6,7 @@ import {
   claimOrphans,
   createSession,
   hashPassword,
+  isSecureRequest,
   setSessionCookie,
 } from "@/lib/auth";
 
@@ -52,7 +53,9 @@ export async function POST(req: Request) {
     // anything created before auth existed now belongs to this account
     await claimOrphans(user.id);
 
-    await setSessionCookie(await createSession(user.id));
+    await setSessionCookie(await createSession(user.id), {
+      secure: isSecureRequest(req),
+    });
     return NextResponse.json({ user: { id: user.id, email: user.email } });
   } catch (e) {
     return NextResponse.json(

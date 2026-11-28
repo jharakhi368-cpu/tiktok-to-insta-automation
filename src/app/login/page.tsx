@@ -34,12 +34,9 @@ export default function LoginPage() {
         setError(d.error ?? "Something went wrong.");
         return;
       }
-        // A full document navigation, not router.replace + refresh.
-        // Those two race: refresh() re-fetches the route that is still
-        // /login, middleware bounces that to "/", and the interleaved
-        // navigations land you back on an empty form. The cookie is set
-        // before this line, so a hard load arrives already authenticated.
-        window.location.assign(next);
+      // full page load: guarantees the new cookie rides along, unlike an
+      // RSC navigation which can race the Set-Cookie being applied
+      window.location.assign(next);
     } catch {
       setError("Could not reach the server.");
     } finally {
