@@ -45,28 +45,31 @@ export async function destroySession(token: string): Promise<void> {
   await db.delete(sessions).where(eq(sessions.token, token));
 }
 
-/**
- * `Secure` must match the scheme the browser actually used. Preview and local
- * URLs are HTTP, and a Secure cookie set over HTTP is silently dropped — which
- * looked exactly like "signs up, then bounces straight back to the login page".
- * Render serves HTTPS, so this stays Secure there and works over HTTP here.
- */
-export function sessionCookieSecure(req?: Request): boolean {
-  const proto =
-    req?.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() ??
-    (process.env.PUBLIC_BASE_URL?.startsWith("https://") ? "https" : undefined);
-  return proto ? proto === "https" : true; // default to Secure when unknown
-}
-
-export async function setSessionCookie(token: string, req?: Request): Promise<void> {
+export async function setSessionCookie(
+  token: string,
+  opts: { secure?: boolean } = {},
+): Promise<void> {
   const store = await cookies();
   store.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: sessionCookieSecure(req),
+    // Derive from the actual request, not NODE_ENV: a Secure cookie sent over
+    // http:// is discarded by the browser, which logs you straight back out.
+    secure: opts.secure ?? false,
     path: "/",
     maxAge: TTL_SECONDS,
   });
+}
+
+/** Was this request received over HTTPS (directly or via a proxy)? */
+export function isSecureRequest(req: Request): boolean {
+  const forwarded = req.headers.get("x-forwarded-proto");
+  if (forwarded) return forwarded.split(",")[0].trim() === "https";
+  try {
+    return new URL(req.url).protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 export async function clearSessionCookie(): Promise<void> {
@@ -117,11 +120,15 @@ const PER_ACCOUNT_KEYS = [
 ];
 
 export async function claimOrphans(userId: string): Promise<void> {
-  await db.update(videos).set({ userId }).where(eq(videos.userId, SENTINEL_USER));
-  await db
-    .update(settings)
-    .set({ userId })
-    .where(
-      and(eq(settings.userId, SENTINEL_USER), inArray(settings.key, PER_ACCOUNT_KEYS)),
-    );
+  try {
+    await db.update(videos).set({ userId }).where(eq(videos.userId, SENTINEL_USER));
+    await db
+      .update(settings)
+      .set({ userId })
+      .where(
+        and(eq(settings.userId, SENTINEL_USER), inArray(settings.key, PER_ACCOUNT_KEYS)),
+      );
+  } catch {
+    /* never abort sign-up over a claim — the account is already created */
+  }
 }
