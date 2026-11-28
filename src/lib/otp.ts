@@ -91,12 +91,50 @@ async function sendCode(email: string, code: string): Promise<SendResult> {
 
 
 /** Never let a connection string or credential reach a log line. */
-function describeDbError(e: unknown): { code?: string; message: string } {
-  const err = e as { code?: string; message?: string };
-  const message = String(err?.message ?? e)
+export function describeDbError(e: unknown): { code?: string; message: string } {
+  // Drizzle wraps the driver error: the useful PostgreSQL code and message
+  // live on `cause`, while the top level only says "Failed query: …".
+  const outer = e as { cause?: { code?: string; message?: string } } & {
+    code?: string;
+    message?: string;
+  };
+  const inner = outer?.cause ?? outer;
+  const message = String(inner?.message ?? outer?.message ?? e)
     .replace(/postgres(?:ql)?:\/\/[^\s@]+@/gi, "postgres://[redacted]@")
     .replace(/(?:password|token|key)\s*=\s*[^\s,;]+/gi, "$1=[redacted]");
-  return { code: err?.code, message };
+  return { code: inner?.code, message };
+}
+
+/** Map PostgreSQL codes to something the operator can act on. */
+export function hintFor(code?: string): string | undefined {
+  switch (code) {
+    case "42P01":
+    case "42P07":
+      return "A table is missing. Run: node scripts/fix-otps.mjs";
+    case "42703":
+    case "42704":
+      return "A column does not match what the app expects. Run: node scripts/fix-otps.mjs";
+    case "42P10":
+      return 'ON CONFLICT ("email") has no matching unique key. Run: node scripts/fix-otps.mjs';
+    case "23505":
+      return "A row with that key already exists.";
+    case "23502":
+      return "A required column was null.";
+    case "53300":
+      return "The database has too many connections — Neon's pooler is saturated. Retry shortly.";
+    case "57P01":
+    case "57P02":
+    case "57P03":
+      return "The database is shutting down or restarting — retry shortly.";
+    case "08006":
+    case "08003":
+    case "08001":
+      return "Could not reach the database — check DATABASE_URL and that Neon is awake.";
+    case "42501":
+      return "The database user lacks permission for this operation.";
+    default:
+      return undefined;
+  }
 }
 
 type SchemaStatus = { ok: true } | { ok: false; error: string };
