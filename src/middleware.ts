@@ -13,8 +13,8 @@ const COOKIE = "reelay_session";
 /** Endpoints that must answer without a session. */
 const PUBLIC_EXACT = new Set([
   "/login",
-  "/api/auth/login",
-  "/api/auth/signup",
+  "/api/auth/request", // send a one-time code
+  "/api/auth/verify", // check it and open the session
   "/api/auth/me",
   "/api/health",
   "/api/telegram/webhook",

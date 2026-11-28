@@ -72,7 +72,8 @@ export const settings = pgTable(
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: text("email").notNull().unique(),
-  passwordHash: text("password_hash").notNull(),
+  /** optional: sign-in is email + one-time code, so no password is required */
+  passwordHash: text("password_hash"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -87,6 +88,19 @@ export const sessions = pgTable("sessions", {
     .notNull()
     .defaultNow(),
 });
+
+/** A one-time sign-in code. Single active code per email, short-lived. */
+export const otps = pgTable("otps", {
+  email: text("email").primaryKey(),
+  code: text("code").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  attempts: integer("attempts").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export type Otp = typeof otps.$inferSelect;
 
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
