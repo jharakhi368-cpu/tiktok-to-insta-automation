@@ -105,6 +105,25 @@ export function describeDbError(e: unknown): { code?: string; message: string } 
 }
 
 /** Map PostgreSQL codes to something the operator can act on. */
+
+/**
+ * Turn a failed query into a client-safe response body plus the server log
+ * line. Kept here so every route reports the PostgreSQL cause identically.
+ */
+export function dbFailure(e: unknown): {
+  error: string;
+  code: string | null;
+  hint: string | null;
+} {
+  const info = describeDbError(e);
+  const hint = hintFor(info.code);
+  return {
+    error: hint ? `${info.message} — ${hint}` : info.message,
+    code: info.code ?? null,
+    hint: hint ?? null,
+  };
+}
+
 export function hintFor(code?: string): string | undefined {
   switch (code) {
     case "42P01":
