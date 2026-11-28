@@ -17,10 +17,34 @@ const sends = new Map<string, number[]>();
  * login screen can show it — clearly flagged, and only until a key is added.
  * Set RESEND_API_KEY and codes go out by email instead.
  */
-async function sendCode(email: string, code: string): Promise<boolean> {
-  // stored key first (set from the app), env as a fallback
-  const key = (await getSetting(KEYS.resendKey)) || process.env.RESEND_API_KEY;
-  if (!key) return false;
+type SendResult = { ok: true } | { ok: false; error: string };
+
+const FROM_RE = /^[^<>@]+@[^<>@\s]+\.[^<>@\s]+$/;
+
+/**
+ * Send the code. `RESEND_API_KEY` is read from the environment — never from
+ * source, never logged, never returned to the client.
+ */
+async function sendCode(email: string, code: string): Promise<SendResult> {
+  const key = process.env.RESEND_API_KEY || (await getSetting(KEYS.resendKey));
+  if (!key) {
+    return {
+      ok: false,
+      error:
+        "Email delivery isn't configured. Set RESEND_API_KEY on the server and try again.",
+    };
+  }
+
+  const from = process.env.EMAIL_FROM ?? "REELAY <onboarding@resend.dev>";
+  const fromAddress = from.match(/<([^>]+)>/)?.[1] ?? from;
+  if (!FROM_RE.test(fromAddress)) {
+    return { ok: false, error: `EMAIL_FROM is not a valid address: ${fromAddress}` };
+  }
+  // Resend's onboarding sender only delivers to the account owner's own address
+  if (fromAddress === "onboarding@resend.dev" && !email) {
+    return { ok: false, error: "EMAIL_FROM is not set for this sender." };
+  }
+
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -29,16 +53,32 @@ async function sendCode(email: string, code: string): Promise<boolean> {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: process.env.EMAIL_FROM ?? "REELAY <onboarding@resend.dev>",
+        from,
         to: [email],
         subject: `${code} is your REELAY sign-in code`,
         text: `Your sign-in code is ${code}.\n\nIt expires in 10 minutes. If you didn't ask for it, ignore this email.`,
       }),
-      signal: AbortSignal.timeout(10_000),
+      signal: AbortSignal.timeout(15_000),
     });
-    return res.ok;
-  } catch {
-    return false;
+
+    const data = (await res.json().catch(() => ({}))) as { message?: string; name?: string };
+    if (!res.ok) {
+      // Resend explains domain/sender problems clearly — pass it through
+      return {
+        ok: false,
+        error: `Email send failed (${res.status}): ${
+          data.message ?? data.name ?? "unknown Resend error"
+        }`,
+      };
+    }
+    return { ok: true };
+  } catch (e) {
+    return {
+      ok: false,
+      error: `Could not reach the email provider: ${
+        e instanceof Error ? e.message : "network error"
+      }`,
+    };
   }
 }
 
@@ -74,8 +114,16 @@ export async function requestOtp(rawEmail: string): Promise<OtpResult> {
       set: { code, expiresAt, attempts: 0, createdAt: new Date() },
     });
 
-  const emailed = await sendCode(email, code);
-  return emailed ? { ok: true, emailed } : { ok: true, emailed: false, devCode: code };
+  const sent = await sendCode(email, code);
+  if (sent.ok) return { ok: true, emailed: true };
+
+  // Production: never return the code — report why delivery failed instead.
+  // Development: show it, because there is no inbox to read.
+  if (process.env.NODE_ENV === "production") {
+    return { ok: false, error: sent.error };
+  }
+  console.warn(`[otp] email not sent, showing code in dev: ${sent.error}`);
+  return { ok: true, emailed: false, devCode: code };
 }
 
 export type VerifyResult = { ok: true; user: User } | { ok: false; error: string };

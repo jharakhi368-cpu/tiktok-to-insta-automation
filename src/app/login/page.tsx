@@ -18,7 +18,30 @@ export default function LoginPage() {
   // read ?next= after mount — avoids useSearchParams/Suspense entirely
   useEffect(() => {
     const p = new URLSearchParams(window.location.search).get("next");
-    if (p && p.startsWith("/") && !p.startsWith("//")) setNext(p);
+    // same-origin page paths only — never /api/…, never protocol-relative
+    if (p && p.startsWith("/") && !p.startsWith("//") && !p.startsWith("/api/")) setNext(p);
+  }, []);
+
+  // Validate the session against the database rather than trusting a cookie.
+  // If it is real, get out of the way; if it is stale, show the form instead
+  // of bouncing between / and /login.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (cancelled || !d?.user) return;
+        const raw = new URLSearchParams(window.location.search).get("next");
+        const safe =
+          raw && raw.startsWith("/") && !raw.startsWith("//") && !raw.startsWith("/api/")
+            ? raw
+            : "/";
+        window.location.replace(safe);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {

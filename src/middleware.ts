@@ -43,10 +43,11 @@ export function middleware(req: NextRequest) {
   const hasSession = Boolean(req.cookies.get(COOKIE)?.value);
   const isPublic = PUBLIC_EXACT.has(pathname) || isPublicMedia(pathname);
 
-  // signed in but looking at the login page → go to the app
-  if (hasSession && pathname === "/login") {
-    return NextResponse.redirect(new URL("/", req.url));
-  }
+  // Deliberately no "/login → / when a cookie exists" redirect. Presence only
+  // proves a cookie exists, not that the session row is valid; redirecting on
+  // presence locked users out — middleware threw them to /, the API answered
+  // 401, and /login bounced them straight back. The login page validates the
+  // session against the database instead.
   // signed out and asking for something private → sign in first
   if (!hasSession && !isPublic) {
     const url = req.nextUrl.clone();

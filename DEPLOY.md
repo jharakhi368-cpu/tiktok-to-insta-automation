@@ -89,3 +89,18 @@ The volumes keep downloaded videos and uploaded covers across restarts.
   your host; a restart cannot break a post.
 - If a restart wipes local media, REELAY re-downloads it from the TikTok link
   before publishing.
+
+## Environment variables
+
+Set these in the host's dashboard. **Names only — never commit values.**
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `DATABASE_URL` | yes | Postgres connection string |
+| `RESEND_API_KEY` | for sign-in | Resend key that emails one-time codes |
+| `EMAIL_FROM` | no | Verified sender for those codes |
+| `PUBLIC_BASE_URL` | no | Public origin; auto-detected from the browser if unset |
+| `ZERNIO_API_KEY` / `ZERNIO_ACCOUNT_ID` | no | can be linked in `/ig` instead |
+| `TELEGRAM_BOT_TOKEN` | no | can be linked in `/bot` instead |
+| `IG_ACCESS_TOKEN` / `IG_BUSINESS_ACCOUNT_ID` | no | Graph API alternative to Zernio |
+| `SCHEDULER_INTERVAL_MS` | no | scheduler tick, default `15000` |

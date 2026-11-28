@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createSession, setSessionCookie } from "@/lib/auth";
+import { createSession, isSecureRequest, setSessionCookie } from "@/lib/auth";
 import { verifyOtp } from "@/lib/otp";
 
 export const dynamic = "force-dynamic";
@@ -17,10 +17,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: result.error }, { status: 401 });
     }
 
-    // No Secure flag: a preview is reachable over http or https, and a browser
-    // discards a Secure cookie on http — which looks exactly like a login loop.
-    await setSessionCookie(await createSession(result.user.id), { secure: false });
-    void req;
+    // Secure only when the request genuinely arrived over HTTPS. Render sends
+    // x-forwarded-proto: https, so production gets a Secure cookie — while a
+    // plain-http dev server still works, because a browser discards Secure
+    // cookies on http and that looks exactly like a login loop.
+    await setSessionCookie(await createSession(result.user.id), {
+      secure: isSecureRequest(req),
+    });
 
     return NextResponse.json({ user: { id: result.user.id, email: result.user.email } });
   } catch (e) {
