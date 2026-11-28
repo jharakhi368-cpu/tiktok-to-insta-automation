@@ -35,8 +35,9 @@ function SignOut() {
         type="button"
         onClick={async () => {
           await fetch("/api/auth/logout", { method: "POST" }).catch(() => undefined);
-          router.replace("/login");
-          router.refresh();
+          // full navigation: the session cookie is gone, so a hard load
+          // cannot be served from a stale authenticated router cache
+          window.location.assign("/login");
         }}
         className="rounded-lg border border-line px-2.5 py-1.5 font-mono text-[10px] text-muted transition-colors hover:border-fault hover:text-fault"
       >

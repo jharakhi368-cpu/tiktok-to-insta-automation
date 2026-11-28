@@ -1,12 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 type Mode = "signin" | "signup";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,8 +34,12 @@ export default function LoginPage() {
         setError(d.error ?? "Something went wrong.");
         return;
       }
-      router.replace(next);
-      router.refresh();
+        // A full document navigation, not router.replace + refresh.
+        // Those two race: refresh() re-fetches the route that is still
+        // /login, middleware bounces that to "/", and the interleaved
+        // navigations land you back on an empty form. The cookie is set
+        // before this line, so a hard load arrives already authenticated.
+        window.location.assign(next);
     } catch {
       setError("Could not reach the server.");
     } finally {
