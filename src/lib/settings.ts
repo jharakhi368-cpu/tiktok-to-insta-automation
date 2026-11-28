@@ -93,19 +93,27 @@ export async function setSetting(
     return;
   }
   cache.set(cacheKey, value);
+
   if (value === null) {
     await db
       .delete(settings)
       .where(and(eq(settings.userId, scope), eq(settings.key, key)));
     return;
   }
-  await db
-    .insert(settings)
-    .values({ userId: scope, key, value })
-    .onConflictDoUpdate({
-      target: [settings.userId, settings.key],
-      set: { value, updatedAt: new Date() },
-    });
+
+  // Update first, insert only when nothing was updated. ON CONFLICT
+  // (user_id, key) requires a matching composite primary key; a database
+  // provisioned before that key existed rejects it with 42P10, which would
+  // break sign-in and key linking on any install awaiting that migration.
+  const updated = await db
+    .update(settings)
+    .set({ value, updatedAt: new Date() })
+    .where(and(eq(settings.userId, scope), eq(settings.key, key)))
+    .returning({ userId: settings.userId });
+
+  if (!updated.length) {
+    await db.insert(settings).values({ userId: scope, key, value });
+  }
 }
 
 export async function getMany(
