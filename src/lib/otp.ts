@@ -63,13 +63,20 @@ async function sendCode(email: string, code: string): Promise<SendResult> {
 
     const data = (await res.json().catch(() => ({}))) as { message?: string; name?: string };
     if (!res.ok) {
-      // Resend explains domain/sender problems clearly — pass it through
-      return {
-        ok: false,
-        error: `Email send failed (${res.status}): ${
-          data.message ?? data.name ?? "unknown Resend error"
-        }`,
-      };
+      let message = `Email send failed (${res.status}): ${
+        data.message ?? data.name ?? "unknown Resend error"
+      }`;
+
+      // Resend's onboarding sender only delivers to the address that owns the
+      // Resend account — a common way a *correct* key still fails. Only append
+      // this when the error is actually about the sender, never to a bad key.
+      const senderFault =
+        res.status === 403 || /sender|domain|verif|from address|onboarding/i.test(message);
+      if (senderFault && fromAddress === "onboarding@resend.dev") {
+        message +=
+          " — the default Resend sender only delivers to the email address that owns your Resend account. Sign in with that same address, or set EMAIL_FROM to a sender you have verified.";
+      }
+      return { ok: false, error: message };
     }
     return { ok: true };
   } catch (e) {
