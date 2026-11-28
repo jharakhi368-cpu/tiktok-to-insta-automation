@@ -172,13 +172,34 @@ async function main() {
     } else {
       const dupes = (
         await client.query(
-          `SELECT user_id, key, COUNT(*)::int AS n FROM settings
-             GROUP BY user_id, key HAVING COUNT(*) > 1`,
+          `SELECT key, COUNT(*)::int AS n FROM settings
+             GROUP BY key HAVING COUNT(*) > 1`,
         )
       ).rows;
       if (dupes.length) {
-        console.log(`\n✗ ${dupes.length} duplicate (user_id, key) pair(s) in settings.`);
-        console.log("  Refusing to replace the primary key — nothing was changed.");
+        console.log(`\n✗ ${dupes.length} setting key(s) exist more than once:`);
+        for (const d of dupes) {
+          const rows = (
+            await client.query(
+              `SELECT user_id, length(value) AS len, md5(value) AS fp FROM settings
+                 WHERE key = $1 ORDER BY user_id`,
+              [d.key],
+            )
+          ).rows;
+          console.log(`    ${d.key} ×${d.n}`);
+          for (const r of rows) {
+            const owner =
+              r.user_id === SENTINEL ? "global (pre-auth)" : `account ${r.user_id.slice(0, 8)}…`;
+            console.log(`      ${owner}  len=${r.len}  md5=${r.fp}`);
+          }
+        }
+        console.log(
+          "\n  Refusing to replace the primary key — values differ between rows, so" +
+            "\n  choosing one would silently discard a credential." +
+            "\n  Keep the row you want, delete the other, then re-run:" +
+            "\n      DELETE FROM settings WHERE user_id = '00000000-0000-0000-0000-000000000000'" +
+            "\n        AND key = '<the-key>';",
+        );
         process.exit(1);
       }
       await dropOldSettingsPk(client); // constraint only, no rows touched

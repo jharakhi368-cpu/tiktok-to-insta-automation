@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { envState } from "@/lib/pipeline";
+import { dbFailure } from "@/lib/otp";
 import { requireUser, currentUser } from "@/lib/auth";
 import { igProvider, igReady, primeIg, verifyInstagram } from "@/lib/instagram";
 import { listZernioAccounts, verifyZernio } from "@/lib/zernio";
@@ -65,11 +66,16 @@ export async function GET(req: Request) {
     }
     return NextResponse.json(await state(user.id));
   } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "settings failed" },
-      { status: 500 },
-    );
-  }
+      const fail = dbFailure(e);
+      console.error(
+        "[instagram:settings]",
+        JSON.stringify({ code: fail.code, hint: fail.hint, message: fail.error }),
+      );
+      return NextResponse.json(
+        { error: fail.error, code: fail.code, hint: fail.hint },
+        { status: 500 },
+      );
+    }
 }
 
 /** Link Instagram through Zernio (preferred) or the Meta Graph API. */
@@ -158,11 +164,16 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true, ...(await state()) });
   } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "link failed" },
-      { status: 500 },
-    );
-  }
+      const fail = dbFailure(e);
+      console.error(
+        "[instagram:link]",
+        JSON.stringify({ code: fail.code, hint: fail.hint, message: fail.error }),
+      );
+      return NextResponse.json(
+        { error: fail.error, code: fail.code, hint: fail.hint },
+        { status: 500 },
+      );
+    }
 }
 
 /** Unlink Instagram — publishes fall back to SIMULATED. */
@@ -174,9 +185,14 @@ export async function DELETE() {
     await primeIg(user.id);
     return NextResponse.json({ ok: true, ...(await state(user.id)) });
   } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "unlink failed" },
-      { status: 500 },
-    );
-  }
+      const fail = dbFailure(e);
+      console.error(
+        "[instagram:unlink]",
+        JSON.stringify({ code: fail.code, hint: fail.hint, message: fail.error }),
+      );
+      return NextResponse.json(
+        { error: fail.error, code: fail.code, hint: fail.hint },
+        { status: 500 },
+      );
+    }
 }
