@@ -14,6 +14,7 @@ export const KEYS = {
   zKey: "zernio_api_key",
   zAccount: "zernio_account_id",
   siteOrigin: "site_origin",
+  resendKey: "resend_api_key", // email delivery for sign-in codes
 } as const;
 
 /** Rows created before any account existed live here, until claimed. */

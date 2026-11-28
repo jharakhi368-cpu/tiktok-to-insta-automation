@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createSession, isSecureRequest, setSessionCookie } from "@/lib/auth";
+import { createSession, setSessionCookie } from "@/lib/auth";
 import { verifyOtp } from "@/lib/otp";
 
 export const dynamic = "force-dynamic";
@@ -17,9 +17,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: result.error }, { status: 401 });
     }
 
-    await setSessionCookie(await createSession(result.user.id), {
-      secure: isSecureRequest(req),
-    });
+    // No Secure flag: a preview is reachable over http or https, and a browser
+    // discards a Secure cookie on http — which looks exactly like a login loop.
+    await setSessionCookie(await createSession(result.user.id), { secure: false });
+    void req;
 
     return NextResponse.json({ user: { id: result.user.id, email: result.user.email } });
   } catch (e) {

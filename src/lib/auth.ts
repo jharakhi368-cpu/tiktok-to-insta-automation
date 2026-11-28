@@ -53,8 +53,9 @@ export async function setSessionCookie(
   store.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    // Derive from the actual request, not NODE_ENV: a Secure cookie sent over
-    // http:// is discarded by the browser, which logs you straight back out.
+    // Never mark Secure unconditionally: a browser discards a Secure cookie on
+    // http://, and a preview can be reached either way — which logs you straight
+    // back out. SameSite=Lax + HttpOnly are the protections that matter here.
     secure: opts.secure ?? false,
     path: "/",
     maxAge: TTL_SECONDS,

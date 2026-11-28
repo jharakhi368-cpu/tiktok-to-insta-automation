@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { otps, users, type User } from "@/db/schema";
 import { claimOrphans } from "./auth";
+import { KEYS, getSetting } from "./settings";
 
 const TTL_MS = 10 * 60_000; //10 minutes
 const MAX_SENDS = 3; // per email per15 minutes
@@ -17,7 +18,8 @@ const sends = new Map<string, number[]>();
  * Set RESEND_API_KEY and codes go out by email instead.
  */
 async function sendCode(email: string, code: string): Promise<boolean> {
-  const key = process.env.RESEND_API_KEY;
+  // stored key first (set from the app), env as a fallback
+  const key = (await getSetting(KEYS.resendKey)) || process.env.RESEND_API_KEY;
   if (!key) return false;
   try {
     const res = await fetch("https://api.resend.com/emails", {

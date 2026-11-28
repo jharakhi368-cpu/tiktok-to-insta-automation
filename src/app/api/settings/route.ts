@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { envState } from "@/lib/pipeline";
-import { KEYS, getMany, setSetting } from "@/lib/settings";
+import { KEYS, getMany, getSetting, setSetting } from "@/lib/settings";
 import { requireUser } from "@/lib/auth";
 import {
   botHandle,
@@ -23,7 +23,12 @@ async function state() {
   ]);
   const token = await resolveToken();
   await ensureBotRunning();
+  const emailKey = await getSetting(KEYS.resendKey);
   return {
+    email: {
+      configured: Boolean(emailKey || process.env.RESEND_API_KEY),
+      source: emailKey ? "stored" : process.env.RESEND_API_KEY ? "env" : null,
+    },
     telegram: {
       webhook: stored[KEYS.tgWebhook] ?? null,
       linked: Boolean(token),
@@ -83,6 +88,14 @@ export async function POST(req: Request) {
     const user = await requireUser();
     if (!user) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
     const body = await req.json().catch(() => ({}));
+
+    // email delivery for sign-in codes (authenticated: an attacker setting
+    // this key would receive your codes)
+    if (body.action === "email") {
+      const key = String(body.apiKey ?? "").trim();
+      await setSetting(KEYS.resendKey, key || null);
+      return NextResponse.json({ ok: true, configured: Boolean(key) });
+    }
 
     // switch between webhook mode (free hosts that sleep) and long polling
     if (body.action === "webhook") {

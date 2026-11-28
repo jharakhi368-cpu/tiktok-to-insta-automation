@@ -11,6 +11,7 @@ const ITEMS = [
   { href: "/posted", label: "Posted", sub: "history" },
   { href: "/calendar", label: "Calendar", sub: "by day" },
   { href: "/ig", label: "Instagram", sub: "connected" },
+  { href: "/settings", label: "Settings", sub: "account" },
 ];
 
 function SignOut() {
@@ -35,9 +36,8 @@ function SignOut() {
         type="button"
         onClick={async () => {
           await fetch("/api/auth/logout", { method: "POST" }).catch(() => undefined);
-          // full navigation: the session cookie is gone, so a hard load
-          // cannot be served from a stale authenticated router cache
-          window.location.assign("/login");
+          router.replace("/login");
+          router.refresh();
         }}
         className="rounded-lg border border-line px-2.5 py-1.5 font-mono text-[10px] text-muted transition-colors hover:border-fault hover:text-fault"
       >

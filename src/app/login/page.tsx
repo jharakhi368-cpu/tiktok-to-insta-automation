@@ -69,7 +69,15 @@ export default function LoginPage() {
         setError(d.error ?? "That code didn't work.");
         return;
       }
-      // full page load so the new session cookie is applied before the next request
+      // Prove the browser kept the cookie before navigating — otherwise we
+      // bounce straight back to /login with no explanation at all.
+      const me = await fetch("/api/auth/me", { cache: "no-store" });
+      if (!me.ok) {
+        setError(
+          "Signed in, but your browser discarded the session cookie. Open this in a normal browser tab (not an embedded preview frame) and check the address starts with https://.",
+        );
+        return;
+      }
       window.location.assign(next);
     } catch {
       setError("Could not reach the server.");
