@@ -25,6 +25,12 @@ export const KEYS = {
  */
 const cache = new Map<string, string | null>();
 const SYSTEM = "__system__"; // cache slot for keys read without a request context
+/**
+ * Keys written before accounts existed (or by the bot/scheduler, which have no
+ * request context) live under this id. Reads fall back to it so an existing
+ * Zernio key is still found; writes always resolve a real account instead.
+ */
+const SYSTEM_LEGACY = "00000000-0000-0000-0000-000000000000";
 const ck = (key: string, userId?: string | null) => `${userId ?? SYSTEM}:${key}`;
 
 
@@ -67,12 +73,26 @@ export async function getSetting(
   const scope = await ownerFor(userId);
   if (!scope) return null;
   try {
+    // Account scope first. Keys written before accounts existed still live in
+    // the global scope, so fall back rather than reporting "not configured"
+    // for a key that is actually present.
     const rows = await db
       .select({ value: settings.value })
       .from(settings)
       .where(and(eq(settings.userId, scope), eq(settings.key, key)))
       .limit(1);
-    const value = rows[0]?.value ?? null;
+    if (rows.length) {
+      const value = rows[0].value;
+      cache.set(cacheKey, value);
+      return value;
+    }
+    if (scope === SYSTEM) return null;
+    const legacy = await db
+      .select({ value: settings.value })
+      .from(settings)
+      .where(and(eq(settings.userId, SYSTEM_LEGACY), eq(settings.key, key)))
+      .limit(1);
+    const value = legacy[0]?.value ?? null;
     cache.set(cacheKey, value);
     return value;
   } catch {
@@ -124,6 +144,17 @@ export async function getMany(
     for (const r of rows) {
       out[r.key] = r.value;
       cache.set(ck(r.key, userId), r.value);
+    }
+    const missing = keys.filter((k) => out[k] === null);
+    if (missing.length && scope !== SYSTEM_LEGACY) {
+      const legacy = await db
+        .select({ key: settings.key, value: settings.value })
+        .from(settings)
+        .where(and(eq(settings.userId, SYSTEM_LEGACY), inArray(settings.key, missing)));
+      for (const r of legacy) {
+        out[r.key] = r.value;
+        cache.set(ck(r.key, userId), r.value);
+      }
     }
     return out;
   } catch {
